@@ -36,7 +36,7 @@ public class Window
         if (Header != "")
         {
             Console.Write('┌' + " ");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.Write(Header);
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(" " + new String('─', width - Header.Length) + '┐');

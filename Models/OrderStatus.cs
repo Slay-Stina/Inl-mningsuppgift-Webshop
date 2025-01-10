@@ -8,7 +8,7 @@ namespace Inlämningsuppgift_Webshop.Models;
 
 public enum OrderStatus
 {
-    Recieved,
+    Pending,
     Proccessed,
     Shipped,
     Delivered,

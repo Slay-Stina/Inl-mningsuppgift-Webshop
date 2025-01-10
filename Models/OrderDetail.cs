@@ -10,6 +10,7 @@ public class OrderDetail
 {
     public int Id { get; set; }
     public int OrderId { get; set; }
+    public virtual List<Product> Products { get; set; }
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public float UnitPrice { get; set; }
