@@ -4,6 +4,7 @@ using Inlämningsuppgift_Webshop.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inlämningsuppgift_Webshop.Migrations
 {
     [DbContext(typeof(AdvNookContext))]
-    partial class AdvNookContextModelSnapshot : ModelSnapshot
+    [Migration("20250115090902_advNook3")]
+    partial class advNook3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,7 +37,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasIndex("ProductsId");
 
-                    b.ToTable("CategoryProduct", (string)null);
+                    b.ToTable("CategoryProduct");
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Category", b =>
@@ -51,7 +54,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Order", b =>
@@ -77,7 +80,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.OrderDetail", b =>
@@ -102,7 +105,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OrderDetails", (string)null);
+                    b.ToTable("OrderDetails");
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Product", b =>
@@ -124,12 +127,17 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("OrderDetailId")
+                        .HasColumnType("int");
+
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.HasIndex("OrderDetailId");
+
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Shipping", b =>
@@ -149,7 +157,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Shippings", (string)null);
+                    b.ToTable("Shippings");
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.User", b =>
@@ -159,9 +167,6 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Admin")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Adress")
                         .IsRequired()
@@ -186,12 +191,12 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("LoggedIn")
+                    b.Property<bool>("Type")
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("CategoryProduct", b =>
@@ -207,6 +212,18 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .HasForeignKey("ProductsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Product", b =>
+                {
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.OrderDetail", null)
+                        .WithMany("Products")
+                        .HasForeignKey("OrderDetailId");
+                });
+
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.OrderDetail", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }
