@@ -12,7 +12,10 @@ public class Window
     public int Left { get; set; }
     public int Top { get; set; }
     public List<string> TextRows { get; set; }
-
+    public Window()
+    {
+        
+    }
     public Window(string header, int left, int top, List<string> textRows)
     {
         Header = header;

@@ -6,21 +6,20 @@ namespace Inlämningsuppgift_Webshop;
 internal class Program
 {
     public static User? LoggedInUser { get; set; }
+    public static Window LogInWindow { get; set; } = new Window();
     static async Task Main(string[] args)
     {
-        var db = new AdvNookContext();
-        Task checkLogin = Methods.GetLoggedInUserAsync(db);
-
         while (true)
         {
+            Console.Clear();
             MiniMenu();
             Banner();
             for (int i = 0; i < 3; i++)
             {
                 Featured(i);
             }
-            await checkLogin;
-            LogIn();
+            await Methods.GetLoggedInUserAsync();
+            Login.DrawLogin();
 
             Methods.SelectItem();
         }
@@ -36,6 +35,10 @@ internal class Program
             "Outlet",
             "Kategorier",
         };
+        if(LoggedInUser is not null && LoggedInUser.Admin)
+        {
+            list.Add("Admin");
+        }
         int index = 1;
         Console.SetCursorPosition(2, 0);
         Console.Write(buffer + "\t");
@@ -45,14 +48,6 @@ internal class Program
             index++;
         }
         Console.Write(buffer);
-    }
-
-    private static void LogIn()
-    {
-        List<string> userName = new List<string>();
-        userName.Add(LoggedInUser == null ? "Press 'L' to log in." : LoggedInUser.FirstName + " " + LoggedInUser.LastName[0]);
-        Window logIn = new Window($"Log in", 125 , 0, userName);
-        logIn.Draw();
     }
 
     private static void Featured(int i)
