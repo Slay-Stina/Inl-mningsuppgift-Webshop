@@ -18,6 +18,7 @@ public class User
     public string Email { get; set; }
     public bool Admin { get; set; }
     public bool LoggedIn { get; set; } = false;
+    public int BasketId { get; set; }
     public static List<string> NewUserForm = new List<string>
     {
         "Förnamn:", "", "",

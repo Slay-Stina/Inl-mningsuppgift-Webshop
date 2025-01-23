@@ -1,5 +1,6 @@
 ﻿using Inlämningsuppgift_Webshop.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,39 +11,7 @@ namespace Inlämningsuppgift_Webshop;
 
 internal class Methods
 {
-    public static void SelectItem()
-    {
-        ConsoleKeyInfo keyInfo = Console.ReadKey();
-        char choise = keyInfo.KeyChar;
-        switch(choise)
-        {
-            case 'l':
-                if(Program.LoggedInUser is null)
-                {
-                    Login.Prompt();
-                    return;
-                }
-                if(Program.LoggedInUser != null)
-                {
-                    using(var db = new AdvNookContext())
-                    { 
-                        var activeUser = db.Users.FirstOrDefault(u => u.LoggedIn == true);
-                        activeUser.LoggedIn = false;
-                        db.SaveChanges();
-                    }
-                    Program.LoggedInUser = null;
-                }
-                Login.DrawLogin();
-                break;
-            case 'a':
-                User.AddUser();
-                break;
-            case '5':
-                if(Program.LoggedInUser.Admin)
-                Admin();
-                break;
-        }
-    }
+    public static int SelectedIndex = 0;
     public static int Checkint()
     {
         while (true)
@@ -63,7 +32,7 @@ internal class Methods
         try
         {
             using(var db = new AdvNookContext())
-            { Program.LoggedInUser = await db.Users.Where(u => u.LoggedIn == true).FirstOrDefaultAsync(); }
+            { Login.ActiveUser = await db.Users.Where(u => u.LoggedIn == true).FirstOrDefaultAsync(); }
         }
         catch (Exception ex)
         {
@@ -78,5 +47,56 @@ internal class Methods
         while (Console.KeyAvailable == false)
         { }
             return;
+    }
+    public static void MiniMenu()
+    {
+        List<string> list = new List<string>
+        {
+            "Startsida",
+            "Produkter",
+            "Kategorier"
+        };
+        if (Login.ActiveUser is not null && Login.ActiveUser.Admin)
+        {
+            list.Add("Admin");
+        }
+        int index = 1;
+        Console.SetCursorPosition(2, 8);
+        foreach (string s in list)
+        {
+            Console.Write(index + ". " + s.PadRight(8) + "\t");
+            index++;
+        }
+    }
+
+    internal static void SelectList(List<string> list, int left, int top)
+    {
+        SelectedIndex = 0;
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (i == SelectedIndex)
+            {
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Black;
+            }
+            else
+            {
+                Console.ResetColor();
+            }
+            Console.SetCursorPosition(left, top + i + 1);
+            Console.WriteLine(list[i]);
+        }
+        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+        if (Console.KeyAvailable)
+        {
+            if(keyInfo.Key == ConsoleKey.DownArrow && SelectedIndex < list.Count)
+            {
+                SelectedIndex++;
+            }
+            if (keyInfo.Key == ConsoleKey.UpArrow && SelectedIndex > 0)
+            {
+                SelectedIndex--;
+            }
+        }
     }
 }

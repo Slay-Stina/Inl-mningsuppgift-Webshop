@@ -6,12 +6,20 @@ using System.Threading.Tasks;
 
 namespace Inlämningsuppgift_Webshop.Models;
 
-public class Product
+internal class Product
 {
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
-    public float Price { get; set; }
+    public decimal Price { get; set; }
     public List<Category> Categories { get; set; }
+    public int Amount { get; set; }
+    public List<Basket>? Baskets { get; set; }
+    public string SupplierId {  get; set; }
     public bool Featured { get; set; }
+
+    internal static void AddNew()
+    {
+        throw new NotImplementedException();
+    }
 }

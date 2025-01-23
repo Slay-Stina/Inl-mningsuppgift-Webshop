@@ -10,10 +10,10 @@ namespace Inlämningsuppgift_Webshop;
 
 internal class Login
 {
+    public static User? ActiveUser { get; set; }
     public static string DefaultHeader = "Logga in";
     public static string ActiveHeader = "Inloggad";
-    public static int left = 125;
-    public static int top = 0;
+    public static Window Window { get; set; } = new Window(125,0);
     public static List<string> DefaultText = new List<string> 
     {
         "Tryck 'L' för att logga in.",
@@ -26,17 +26,17 @@ internal class Login
         "Användarnamn:".PadRight(27),
         ""
         };
-        Program.LogInWindow.TextRows = loginText;
-        Program.LogInWindow.Draw();
+        Window.TextRows = loginText;
+        Window.Draw();
         Console.SetCursorPosition(127, 2);
         string username = Console.ReadLine();
         using (var db = new AdvNookContext())
         {
             try
             {
-                Program.LoggedInUser = db.Users.Where(u => u.Username == username).FirstOrDefault();
-                if(Program.LoggedInUser != null)
-                Program.LoggedInUser.LoggedIn = true;
+                ActiveUser = db.Users.Where(u => u.Username == username).FirstOrDefault();
+                if(ActiveUser != null)
+                ActiveUser.LoggedIn = true;
             }
             catch (Exception ex)
             {
@@ -49,13 +49,11 @@ internal class Login
 
     internal static void DrawLogin()
     {
-        Program.LogInWindow.Left = left; 
-        Program.LogInWindow.Top = top;
-        Program.LogInWindow.Header = Program.LoggedInUser is null ? DefaultHeader : ActiveHeader;
-        Program.LogInWindow.TextRows = Program.LoggedInUser is null ? DefaultText : new List<string>
-        {Program.LoggedInUser.FirstName + " " + Program.LoggedInUser.LastName,
+        Window.Header = ActiveUser is null ? DefaultHeader : ActiveHeader;
+        Window.TextRows = ActiveUser is null ? DefaultText : new List<string>
+        {ActiveUser.FirstName + " " + ActiveUser.LastName,
         "",
         "Tryck 'L' för att logga ut."};
-        Program.LogInWindow.Draw();
+        Window.Draw();
     }
 }

@@ -4,6 +4,7 @@ using Inlämningsuppgift_Webshop.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inlämningsuppgift_Webshop.Migrations
 {
     [DbContext(typeof(AdvNookContext))]
-    partial class AdvNookContextModelSnapshot : ModelSnapshot
+    [Migration("20250123111433_advNook9")]
+    partial class advNook9
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace Inlämningsuppgift_Webshop.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BasketProduct", b =>
-                {
-                    b.Property<int>("BasketsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("BasketsId", "ProductsId");
-
-                    b.HasIndex("ProductsId");
-
-                    b.ToTable("BasketProduct");
-                });
 
             modelBuilder.Entity("CategoryProduct", b =>
                 {
@@ -52,7 +40,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
                     b.ToTable("CategoryProduct");
                 });
 
-            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Basket", b =>
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Basket", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -60,7 +48,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -158,8 +146,8 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
 
                     b.Property<string>("SupplierId")
                         .IsRequired()
@@ -258,21 +246,6 @@ namespace Inlämningsuppgift_Webshop.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("BasketProduct", b =>
-                {
-                    b.HasOne("Inlämningsuppgift_Webshop.Models.Basket", null)
-                        .WithMany()
-                        .HasForeignKey("BasketsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Inlämningsuppgift_Webshop.Models.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("CategoryProduct", b =>

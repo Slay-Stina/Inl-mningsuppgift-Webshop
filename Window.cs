@@ -12,9 +12,12 @@ public class Window
     public int Left { get; set; }
     public int Top { get; set; }
     public List<string> TextRows { get; set; }
-    public Window()
+    public int? SelectedIndex { get; set; } = null;
+    public static Window Error = new Window("ERROR", 50, 20, new List<string> { "Det du angett har blivit fel!" });
+    public Window(int left, int top)
     {
-        
+        Left = left;
+        Top = top;
     }
     public Window(string header, int left, int top, List<string> textRows)
     {
@@ -53,7 +56,19 @@ public class Window
         for (int j = 0; j < TextRows.Count; j++)
         {
             Console.SetCursorPosition(Left, Top + j + 1);
-            Console.WriteLine('│' + " " + TextRows[j] + new String(' ', width - TextRows[j].Length + 1) + '│');
+            Console.Write('│' + " ");
+            if (j == SelectedIndex)
+            {
+                SelectedRow();
+            }
+            else
+            {
+                Console.ResetColor();
+            }
+            Console.Write(TextRows[j] + new String(' ', width - TextRows[j].Length));
+            Console.ResetColor();
+            Console.WriteLine(" " + '│');
+            //Console.WriteLine('│' + " " + TextRows[j] + new String(' ', width - TextRows[j].Length + 1) + '│');
         }
 
         // Rita undre delen av fönstret
@@ -69,9 +84,33 @@ public class Window
 
         Console.SetCursorPosition(0, Lowest.LowestPosition);
     }
+    public static void SelectedRow()
+    {
+        Console.BackgroundColor = ConsoleColor.White;
+        Console.ForegroundColor = ConsoleColor.Black;
+    }
+    public void Navigate(ConsoleKey key)
+    {
+        if (TextRows == null || TextRows.Count == 0)
+            return;
+
+        if (key == ConsoleKey.UpArrow)
+        {
+            SelectedIndex = (SelectedIndex == null || SelectedIndex == 0)
+                ? TextRows.Count - 1
+                : SelectedIndex - 1;
+        }
+        else if (key == ConsoleKey.DownArrow)
+        {
+            SelectedIndex = (SelectedIndex == null || SelectedIndex == TextRows.Count - 1)
+                ? 0
+                : SelectedIndex + 1;
+        }
+    }
 }
 
 public static class Lowest
 {
     public static int LowestPosition { get; set; }
 }
+
