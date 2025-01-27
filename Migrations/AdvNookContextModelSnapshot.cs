@@ -60,9 +60,6 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Baskets");
@@ -161,11 +158,12 @@ namespace Inlämningsuppgift_Webshop.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("SupplierId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
 
                     b.ToTable("Products");
                 });
@@ -257,6 +255,8 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BasketId");
+
                     b.ToTable("Users");
                 });
 
@@ -288,6 +288,28 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .HasForeignKey("ProductsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Product", b =>
+                {
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.User", b =>
+                {
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.Basket", "Basket")
+                        .WithMany()
+                        .HasForeignKey("BasketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Basket");
                 });
 #pragma warning restore 612, 618
         }

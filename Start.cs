@@ -1,4 +1,6 @@
 ﻿using Azure;
+using Inlämningsuppgift_Webshop.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,14 +11,55 @@ namespace Inlämningsuppgift_Webshop;
 
 internal class Start
 {
+    private static List<Product> _productpage = new List<Product>();
+    private static Window _pageWindow = new Window(35, 10);
     public static void Page()
     {
         Banner();
-        for (int i = 0; i < 3; i++)
+        Methods.MiniMenu();
+
+        switch (Program.ActiveSubPage)
         {
-            Featured(i);
+            case SubPage.Default:
+                _pageWindow.Header = "";
+                for (int i = 0; i < 3; i++)
+                {
+                    Featured(i);
+                }
+                break;
+            case SubPage.Categories:
+                ListCategories();
+                break;
+            case SubPage.Products:
+                ListProducts();
+                break;
+            case SubPage.Users:
+                //Users();
+                break;
         }
     }
+
+    private static void ListProducts()
+    {
+        _pageWindow.Header = "Produkter";
+
+        List<string> productList = new List<string>();
+        using (var db = new AdvNookContext())
+        {
+            _productpage = db.Products.ToList();
+            productList = _productpage.Select(p => $"{p.Name} - {p.Price}").ToList();
+        }
+        _pageWindow.TextRows = productList;
+        _pageWindow.Draw();
+    }
+
+    private static void ListCategories()
+    {
+        _pageWindow.Header = "Kategorier";
+
+        throw new NotImplementedException();
+    }
+
     private static void Featured(int i)
     {
         char[] xyz = ['X', 'Y', 'Z'];

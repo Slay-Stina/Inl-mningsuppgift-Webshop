@@ -9,6 +9,35 @@ namespace Inlämningsuppgift_Webshop.Models;
 internal class Basket
 {
     public int Id { get; set; }
-    public int? UserId { get; set; }
-    public List<Product>? Products { get; set; }
+    public virtual ICollection<Product>? Products { get; set; }
+
+    private static Window _window = new Window("Varukorg", 125, 7);
+    private static List<string> _emptyBasket = new List<string> { "Varukorgen är tom" };
+
+    public static void DrawBasket()
+    {
+        Basket basket;
+
+        if (Login.ActiveUser != null)
+        {
+            basket = Login.ActiveUser.Basket;
+        }
+        else
+        {
+            basket = new Basket();
+        }
+
+        if (basket != null && basket.Products.Count > 0)
+        {
+            var basketProducts = basket.Products.GroupBy(g => g.Name);
+            var productList = basketProducts.Select(g => $"{g.Key.PadRight(20)} {g.Count()} - {g.Select(s => s.Price).Sum()}Kr").ToList();
+            _window.TextRows = productList;
+        }
+        else
+        {
+            _window.TextRows = _emptyBasket;
+        }
+        _window.Draw();
+    }
+
 }

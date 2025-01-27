@@ -52,20 +52,15 @@ internal class Methods
     {
         List<string> list = new List<string>
         {
-            "Startsida",
-            "Produkter",
-            "Kategorier"
+            "'H'em",
+            "'P'rodukter",
+            "'K'ategorier"
         };
-        if (Login.ActiveUser is not null && Login.ActiveUser.Admin)
-        {
-            list.Add("Admin");
-        }
-        int index = 1;
+
         Console.SetCursorPosition(2, 8);
         foreach (string s in list)
         {
-            Console.Write(index + ". " + s.PadRight(8) + "\t");
-            index++;
+            Console.Write(s.PadRight(10) + "\t");
         }
     }
 

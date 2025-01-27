@@ -1,11 +1,5 @@
 ﻿using Inlämningsuppgift_Webshop.Models;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inlämningsuppgift_Webshop;
 
@@ -13,16 +7,19 @@ internal class Admin
 {
     private static List<string> _list = new List<string>
     {
+        "'H': Hem",
         "'K': Hantera kategorier.",
         "'P': Hantera produkter.",
-        "'U': Hantera användare."
+        "'U': Hantera användare.",
+        "'S': Hantera leverantörer."
     };
-    private static Window menu = new Window("Admin meny", 2, 10, _list);
-    //private static SubPage _adminPage { get; set; } = SubPage.Default;
+    private static Window _menu = new Window("Admin meny", 2, 0, _list);
+    private static Window _adminList { get; set; } = new Window( 2, 10);
+
     internal static void Page()
     {
         Banner();
-        menu.Draw();
+        _menu.Draw();
         switch (Program.ActiveSubPage)
         {
             case SubPage.Default:
@@ -30,30 +27,108 @@ internal class Admin
             case SubPage.Categories:
                 AdminCategories();
                 break;
+            case SubPage.Products:
+                AdminProducts();
+                break;
+            case SubPage.Users:
+                AdminUsers();
+                break;
+            case SubPage.Suppliers:
+                AdminSupplier();
+                break;
         }
     }
 
-    public static void SelectAdminItem(ConsoleKey choice)
+    public static void SelectAdminItem(ConsoleKey key)
     {
-        switch (choice)
+        switch (Program.ActiveSubPage)
         {
-            case ConsoleKey.K:
-                Program.ActiveSubPage = SubPage.Categories;
+            case SubPage.Categories:
+                if (key == ConsoleKey.N)
+                {
+                    Category.AddNewCategory();
+                }
+                else if (key == ConsoleKey.R)
+                {
+                    Category.EditCategory();
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
+                }
                 break;
-            case ConsoleKey.P:
+
+            case SubPage.Products:
+                if (key == ConsoleKey.N)
+                {
+                    Product.AddNewProduct();
+                }
+                else if (key == ConsoleKey.R)
+                {
+                    Product.EditProduct();
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
+                }
                 break;
-            case ConsoleKey.U:
+
+            case SubPage.Users:
+                if (key == ConsoleKey.N)
+                {
+                    User.AddUser();
+                }
+                else if (key == ConsoleKey.R)
+                {
+                    User.EditUser();
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
+                }
                 break;
-            case ConsoleKey.N:
-                Category.AddNew();
-                Console.Clear();
-                AdminCategories();
+
+            case SubPage.Suppliers:
+                if (key == ConsoleKey.N)
+                {
+                    Supplier.AddNewSupplier();
+                }
+                else if (key == ConsoleKey.R)
+                {
+                    Supplier.EditSupplier();
+                }
+                else
+                {
+                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
+                }
                 break;
-            case ConsoleKey.M:
-                Product.AddNew();
-                Console.Clear();
+
+            default:
+                Console.WriteLine("Ingen giltig sida aktiv.");
                 break;
         }
+    }
+
+    private static void AdminProducts()
+    {
+        List<string> products = new List<string>();
+
+        using (var db = new AdvNookContext())
+        {
+            products = db.Products
+                .Include(p => p.Categories)
+                .Select(p =>
+                    $"{p.Name.PadRight(20)}" +
+                    $"{p.Price.ToString("C").PadRight(20)}" +
+                    $"{p.Amount}".PadRight(20) +
+                    $"Featured: {(p.Featured ? "Ja" : "Nej")}".PadRight(20) +
+                    $"{string.Join(", ", p.Categories.Select(c => c.Name))}"
+                ).ToList();
+        }
+        _adminList.TextRows = products.Count == 0 ? new List<string> { "" } : products;
+        _adminList.Header = $"Produkter - 'N'y - 'R'edigera";
+
+        _adminList.Navigate();
     }
 
     private static void AdminCategories()
@@ -63,9 +138,27 @@ internal class Admin
         {
             categories = db.Categories.Select(k => k.Name).ToList();
         }
-        Window categoryList = new Window("'N'y - 'R'edigera", 35, 10, categories.Count == 0 ? new List<string> { "" } : categories);
+        _adminList.TextRows = categories.Count == 0 ? new List<string> { "" } : categories;
+        _adminList.Header = $"Kategorier - 'N'y - 'R'edigera";
+
+        _adminList.Navigate();
+    }
+
+    private static void AdminUsers()
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void AdminSupplier()
+    {
+        List<string> suppliers = new List<string>();
+        using (var db = new AdvNookContext())
+        {
+            suppliers = db.Suppliers.Select(s => s.Name).ToList();
+        }
+        Window supplierList = new Window("Leverantörer - 'N'y - 'R'edigera", 35, 10, suppliers.Count == 0 ? new List<string> { "" } : suppliers);
         //categoryList.Navigate(keyInfo.Key);
-        categoryList.Draw();
+        supplierList.Draw();
     }
 
     private static void Banner()

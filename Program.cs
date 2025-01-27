@@ -1,4 +1,5 @@
 ﻿using Inlämningsuppgift_Webshop.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -8,23 +9,25 @@ internal class Program
 {
     static List<ConsoleKey> MainPageKeys { get; } = new List<ConsoleKey>
     {
-        ConsoleKey.NumPad1,
-        ConsoleKey.NumPad4,
-        ConsoleKey.D1,
-        ConsoleKey.D4
+        ConsoleKey.H,
+        ConsoleKey.A
     };
-
+    static List<ConsoleKey> SubPageKeys { get; } = new List<ConsoleKey>
+    {
+        ConsoleKey.P,
+        ConsoleKey.K,
+        ConsoleKey.U,
+        ConsoleKey.S
+    };
     static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
     {
-        ConsoleKey.K,
-        ConsoleKey.P,
-        ConsoleKey.U,
         ConsoleKey.N,
-        ConsoleKey.M
+        ConsoleKey.R
     };
 
     public static MainPage ActiveMainPage = MainPage.Startpage;
     public static SubPage ActiveSubPage = SubPage.Default;
+    public static ConsoleKeyInfo KeyInfo {get; set;}
 
     static async Task Main(string[] args)
     {
@@ -47,18 +50,34 @@ internal class Program
                 await checkLogin;
             }
             
-            Methods.MiniMenu();
             Login.DrawLogin();
+            //DeleteBasket();
+            Basket.DrawBasket();
 
-            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-            if (MainPageKeys.Contains(keyInfo.Key))
+            KeyInfo = Console.ReadKey(true);
+            //ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            if (MainPageKeys.Contains(KeyInfo.Key))
             {
-                ActiveMainPage = SelectMainPage(keyInfo.Key);
+                ActiveMainPage = SelectMainPage(KeyInfo.Key);
             }
+            if (SubPageKeys.Contains(KeyInfo.Key))
+            {
+                ActiveSubPage = SelectSubPage(KeyInfo.Key);
+            }
+            SelectItem(KeyInfo.Key);
+        }
+    }
 
-            ActiveSubPage = SelectSubPage(keyInfo.Key);
-
-            SelectItem(keyInfo.Key);
+    private static void DeleteBasket() // Ifall man behöver cleara varukorgar
+    {
+        using (var db = new AdvNookContext())
+        {
+            var b = db.Baskets.ToList();
+            foreach (var item in b)
+            {
+                db.Baskets.Remove(item);
+            }
+            db.SaveChanges();
         }
     }
 
@@ -66,17 +85,19 @@ internal class Program
     {
         switch (key)
         {
-            case ConsoleKey.NumPad2:
-            case ConsoleKey.D2:
+            case ConsoleKey.P:
                 return SubPage.Products;
 
-            case ConsoleKey.NumPad3:
-            case ConsoleKey.D3:
+            case ConsoleKey.K:
                 return SubPage.Categories;
 
             case ConsoleKey.U:
                 return SubPage.Users;
 
+            case ConsoleKey.S:
+                if(ActiveMainPage == MainPage.Admin)
+                    { return SubPage.Suppliers; }
+                else { return SubPage.Default; }
             default:
                 return SubPage.Default;
         }
@@ -86,12 +107,10 @@ internal class Program
     {
         switch (key)
         {
-            case ConsoleKey.NumPad1:
-            case ConsoleKey.D1:
+            case ConsoleKey.H:
                 return MainPage.Startpage;
 
-            case ConsoleKey.NumPad4:
-            case ConsoleKey.D4:
+            case ConsoleKey.A:
                 if (Login.ActiveUser is not null && Login.ActiveUser.Admin)
                 {
                     return MainPage.Admin;
@@ -113,28 +132,19 @@ internal class Program
         switch (key)
         {
             case ConsoleKey.A:
-                User.AddUser();
+                if (Login.ActiveUser is null)
+                {
+                    User.AddUser();
+                }
                 break;
 
-            //case ConsoleKey.UpArrow:
-            //    if(ActiveSubPage is not SubPage.Default)
-            //    {
-                    
-            //    }
-            //    break;
-            //case ConsoleKey.DownArrow:
-            //    if(ActiveSubPage is not SubPage.Default)
-            //    {
-                    
-            //    }
-            //    break;
             default: break;
         }
     }
 
     private static bool AdminKeys(ConsoleKey key)
     {
-        if (Login.ActiveUser is not null && Login.ActiveUser.Admin && AdminKeysList.Contains(key))
+        if (ActiveMainPage == MainPage.Admin && AdminKeysList.Contains(key))
         {
             Admin.SelectAdminItem(key);
             return true;

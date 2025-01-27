@@ -11,13 +11,32 @@ public class Window
     public string Header { get; set; }
     public int Left { get; set; }
     public int Top { get; set; }
-    public List<string> TextRows { get; set; }
-    public int? SelectedIndex { get; set; } = null;
-    public static Window Error = new Window("ERROR", 50, 20, new List<string> { "Det du angett har blivit fel!" });
+    public List<string> TextRows { get; set; } = new List<string> { "" };
+    public int? SelectedIndex { get; set; }
     public Window(int left, int top)
     {
         Left = left;
         Top = top;
+    }
+    public Window(string header, int left, int top)
+    {
+        Header = header;
+        Left = left;
+        Top = top;
+    }
+    public Window(string header, string errorMsg)
+    {
+        Header = header;
+        Left = 50;
+        Top = 20;
+        TextRows = new List<string> { errorMsg };
+    }
+    public Window(string header, List<string> list)
+    {
+        Header = header;
+        Left = 50;
+        Top = 20;
+        TextRows = list;
     }
     public Window(string header, int left, int top, List<string> textRows)
     {
@@ -89,23 +108,32 @@ public class Window
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
     }
-    public void Navigate(ConsoleKey key)
+    public void Navigate()
     {
         if (TextRows == null || TextRows.Count == 0)
             return;
-
-        if (key == ConsoleKey.UpArrow)
+        if (SelectedIndex is null)
         {
-            SelectedIndex = (SelectedIndex == null || SelectedIndex == 0)
+            SelectedIndex = 0;
+        }
+
+        if (Program.KeyInfo.Key == ConsoleKey.UpArrow)
+        {
+            SelectedIndex = (SelectedIndex == 0)
                 ? TextRows.Count - 1
                 : SelectedIndex - 1;
         }
-        else if (key == ConsoleKey.DownArrow)
+        else if (Program.KeyInfo.Key == ConsoleKey.DownArrow)
         {
-            SelectedIndex = (SelectedIndex == null || SelectedIndex == TextRows.Count - 1)
+            SelectedIndex = (SelectedIndex == TextRows.Count - 1)
                 ? 0
                 : SelectedIndex + 1;
         }
+        else if (Program.KeyInfo.Key == ConsoleKey.Enter)
+        {
+
+        }
+        Draw();
     }
 }
 

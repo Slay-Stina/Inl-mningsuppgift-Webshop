@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inlämningsuppgift_Webshop.Migrations
 {
     [DbContext(typeof(AdvNookContext))]
-    [Migration("20250123111433_advNook9")]
-    partial class advNook9
+    [Migration("20250127112158_NewAdvNook1")]
+    partial class NewAdvNook1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,21 @@ namespace Inlämningsuppgift_Webshop.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("BasketProduct", b =>
+                {
+                    b.Property<int>("BasketsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BasketsId", "ProductsId");
+
+                    b.HasIndex("ProductsId");
+
+                    b.ToTable("BasketProduct");
+                });
 
             modelBuilder.Entity("CategoryProduct", b =>
                 {
@@ -40,16 +55,13 @@ namespace Inlämningsuppgift_Webshop.Migrations
                     b.ToTable("CategoryProduct");
                 });
 
-            modelBuilder.Entity("Inlämningsuppgift_Webshop.Basket", b =>
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Basket", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -146,14 +158,15 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<float>("Price")
-                        .HasColumnType("real");
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("SupplierId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
 
                     b.ToTable("Products");
                 });
@@ -245,7 +258,24 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BasketId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("BasketProduct", b =>
+                {
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.Basket", null)
+                        .WithMany()
+                        .HasForeignKey("BasketsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CategoryProduct", b =>
@@ -261,6 +291,28 @@ namespace Inlämningsuppgift_Webshop.Migrations
                         .HasForeignKey("ProductsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Product", b =>
+                {
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.User", b =>
+                {
+                    b.HasOne("Inlämningsuppgift_Webshop.Models.Basket", "Basket")
+                        .WithMany()
+                        .HasForeignKey("BasketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Basket");
                 });
 #pragma warning restore 612, 618
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Inlämningsuppgift_Webshop.Models;
 
-public class User
+internal class User
 {
     public int Id { get; set; }
     public string FirstName { get; set; }
@@ -18,7 +18,7 @@ public class User
     public string Email { get; set; }
     public bool Admin { get; set; }
     public bool LoggedIn { get; set; } = false;
-    public int BasketId { get; set; }
+    public Basket Basket { get; set; }
     public static List<string> NewUserForm = new List<string>
     {
         "Förnamn:", "", "",
@@ -51,6 +51,7 @@ public class User
             newUser.Adress = Console.ReadLine();
             Console.SetCursorPosition(127, 17);
             newUser.City = Console.ReadLine();
+            newUser.Basket = new Basket();
             newUser.Admin = newUser.FirstName == "August" && newUser.LastName == "Högbom" ? true : false;
             newUser.Username = newUser.FirstName.ToLower().Substring(0, 3) + newUser.LastName.ToLower().Substring(0, 3);
             Console.SetCursorPosition(127, 19);
@@ -60,5 +61,10 @@ public class User
             db.SaveChanges();
             Methods.KeyPress();
         }
+    }
+
+    internal static void EditUser()
+    {
+        throw new NotImplementedException();
     }
 }

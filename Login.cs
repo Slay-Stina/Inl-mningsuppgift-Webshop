@@ -11,13 +11,12 @@ namespace Inlämningsuppgift_Webshop;
 internal class Login
 {
     public static User? ActiveUser { get; set; }
-    public static string DefaultHeader = "Logga in";
+    public static string DefaultHeader = "'L'ogga in";
     public static string ActiveHeader = "Inloggad";
-    public static Window Window { get; set; } = new Window(125,0);
+    private static Window _window { get; set; } = new Window(125,0);
     public static List<string> DefaultText = new List<string> 
     {
-        "Tryck 'L' för att logga in.",
-        "Tryck 'A' för ny användare"
+        "'A'ddera Användare"
     };
     public static void Prompt()
     {
@@ -26,8 +25,8 @@ internal class Login
         "Användarnamn:".PadRight(27),
         ""
         };
-        Window.TextRows = loginText;
-        Window.Draw();
+        _window.TextRows = loginText;
+        _window.Draw();
         Console.SetCursorPosition(127, 2);
         string username = Console.ReadLine();
         using (var db = new AdvNookContext())
@@ -49,11 +48,12 @@ internal class Login
 
     internal static void DrawLogin()
     {
-        Window.Header = ActiveUser is null ? DefaultHeader : ActiveHeader;
-        Window.TextRows = ActiveUser is null ? DefaultText : new List<string>
+        _window.Header = ActiveUser is null ? DefaultHeader : ActiveHeader;
+        _window.TextRows = ActiveUser is null ? DefaultText : new List<string>
         {ActiveUser.FirstName + " " + ActiveUser.LastName,
         "",
-        "Tryck 'L' för att logga ut."};
-        Window.Draw();
+        "'L'ogga ut.",
+        ActiveUser is not null && ActiveUser.Admin ? "'A'dminsida" : ""};
+        _window.Draw();
     }
 }

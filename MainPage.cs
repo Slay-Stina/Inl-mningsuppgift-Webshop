@@ -16,5 +16,6 @@ internal enum SubPage
     Default,
     Categories,
     Products,
-    Users
+    Users,
+    Suppliers
 }
