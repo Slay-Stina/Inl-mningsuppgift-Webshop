@@ -33,8 +33,50 @@ internal class Category
         }
     }
 
-    internal static void EditCategory()
+    internal static void EditCategory(Window list, int index)
     {
-        throw new NotImplementedException();
+        string item = list.TextRows[index];
+        using (var db = new AdvNookContext())
+        {
+            var category = db.Categories.Where(c => c.Name == item).FirstOrDefault();
+            if (category != null)
+            {
+                Window editCat = new Window("Redigera Kategori", new List<string> { "Nytt Namn:".PadRight(20) });
+                editCat.Draw();
+                Console.SetCursorPosition(51, 21);
+                string catName = Console.ReadLine();
+                if (catName is not "" && catName is not null)
+                {
+                    try
+                    { 
+                        category.Name = catName; 
+                        db.Categories.Update(category); 
+                    }
+                    catch (Exception e) 
+                    { Console.WriteLine(e.InnerException); }
+                    finally
+                    { db.SaveChanges(); }
+                }
+                else
+                {
+                    Window error = new Window("ERROR", "Det du angett har blivit fel.");
+                    error.Draw();
+                }
+            }
+        }
+    }
+
+    internal static void RemoveCategory(Window list, int index)
+    {
+        string item = list.TextRows[index];
+        using (var db = new AdvNookContext())
+        {
+            var category = db.Categories.Where(c => c.Name == item).FirstOrDefault();
+            try
+            { db.Categories.Remove(category);
+            }
+            finally
+            { db.SaveChanges(); }
+        }
     }
 }

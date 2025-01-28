@@ -34,7 +34,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasIndex("ProductsId");
 
-                    b.ToTable("BasketProduct");
+                    b.ToTable("BasketProduct", (string)null);
                 });
 
             modelBuilder.Entity("CategoryProduct", b =>
@@ -49,7 +49,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasIndex("ProductsId");
 
-                    b.ToTable("CategoryProduct");
+                    b.ToTable("CategoryProduct", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Basket", b =>
@@ -62,7 +62,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Baskets");
+                    b.ToTable("Baskets", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Category", b =>
@@ -79,7 +79,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Order", b =>
@@ -105,7 +105,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.OrderDetail", b =>
@@ -130,7 +130,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OrderDetails");
+                    b.ToTable("OrderDetails", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Product", b =>
@@ -165,7 +165,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Shipping", b =>
@@ -185,7 +185,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Shippings");
+                    b.ToTable("Shippings", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.Supplier", b =>
@@ -206,7 +206,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Suppliers");
+                    b.ToTable("Suppliers", (string)null);
                 });
 
             modelBuilder.Entity("Inlämningsuppgift_Webshop.Models.User", b =>
@@ -257,7 +257,7 @@ namespace Inlämningsuppgift_Webshop.Migrations
 
                     b.HasIndex("BasketId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("BasketProduct", b =>

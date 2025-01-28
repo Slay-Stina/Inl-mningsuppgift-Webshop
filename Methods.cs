@@ -32,7 +32,10 @@ internal class Methods
         try
         {
             using(var db = new AdvNookContext())
-            { Login.ActiveUser = await db.Users.Where(u => u.LoggedIn == true).FirstOrDefaultAsync(); }
+            { 
+                Login.ActiveUser = await db.Users.Include(u => u.Basket.Products).FirstOrDefaultAsync(u => u.LoggedIn == true);
+                //Login.ActiveUser.Basket = db.Baskets.Where(b => b.Id == Login.ActiveUser.Basket.Id).FirstOrDefault();
+            }
         }
         catch (Exception ex)
         {

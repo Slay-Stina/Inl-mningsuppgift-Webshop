@@ -50,11 +50,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.R)
                 {
-                    Category.EditCategory();
+                    Category.EditCategory(_adminList,(int)_adminList.SelectedIndex);
                 }
-                else
+                else if (key == ConsoleKey.T)
                 {
-                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
+                    Category.RemoveCategory(_adminList, (int)_adminList.SelectedIndex);
                 }
                 break;
 
@@ -67,10 +67,6 @@ internal class Admin
                 {
                     Product.EditProduct();
                 }
-                else
-                {
-                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
-                }
                 break;
 
             case SubPage.Users:
@@ -81,10 +77,6 @@ internal class Admin
                 else if (key == ConsoleKey.R)
                 {
                     User.EditUser();
-                }
-                else
-                {
-                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
                 }
                 break;
 
@@ -97,14 +89,6 @@ internal class Admin
                 {
                     Supplier.EditSupplier();
                 }
-                else
-                {
-                    Console.WriteLine("Ogiltigt val. Tryck 'N' för att lägga till eller 'R' för att redigera.");
-                }
-                break;
-
-            default:
-                Console.WriteLine("Ingen giltig sida aktiv.");
                 break;
         }
     }
@@ -126,7 +110,7 @@ internal class Admin
                 ).ToList();
         }
         _adminList.TextRows = products.Count == 0 ? new List<string> { "" } : products;
-        _adminList.Header = $"Produkter - 'N'y - 'R'edigera";
+        _adminList.Header = $"Produkter - 'N'y - 'R'edigera - 'T'a bort";
 
         _adminList.Navigate();
     }
@@ -139,7 +123,7 @@ internal class Admin
             categories = db.Categories.Select(k => k.Name).ToList();
         }
         _adminList.TextRows = categories.Count == 0 ? new List<string> { "" } : categories;
-        _adminList.Header = $"Kategorier - 'N'y - 'R'edigera";
+        _adminList.Header = $"Kategorier - 'N'y - 'R'edigera - 'T'a bort";
 
         _adminList.Navigate();
     }
@@ -156,7 +140,7 @@ internal class Admin
         {
             suppliers = db.Suppliers.Select(s => s.Name).ToList();
         }
-        Window supplierList = new Window("Leverantörer - 'N'y - 'R'edigera", 35, 10, suppliers.Count == 0 ? new List<string> { "" } : suppliers);
+        Window supplierList = new Window("Leverantörer - 'N'y - 'R'edigera - 'T'a bort", 35, 10, suppliers.Count == 0 ? new List<string> { "" } : suppliers);
         //categoryList.Navigate(keyInfo.Key);
         supplierList.Draw();
     }

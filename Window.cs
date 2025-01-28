@@ -129,10 +129,7 @@ public class Window
                 ? 0
                 : SelectedIndex + 1;
         }
-        else if (Program.KeyInfo.Key == ConsoleKey.Enter)
-        {
-
-        }
+        
         Draw();
     }
 }

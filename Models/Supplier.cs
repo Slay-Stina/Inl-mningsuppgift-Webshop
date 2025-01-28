@@ -30,8 +30,6 @@ internal class Supplier
             db.Suppliers.Add(new Supplier { Name = name, Country = country });
             db.SaveChanges();
         }
-        Window successWindow = new Window("SUCCESS", "Leverantören har lagts till!");
-        successWindow.Draw();
     }
 
     internal static void EditSupplier()

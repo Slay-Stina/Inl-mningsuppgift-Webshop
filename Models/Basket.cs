@@ -9,10 +9,11 @@ namespace Inlämningsuppgift_Webshop.Models;
 internal class Basket
 {
     public int Id { get; set; }
-    public virtual ICollection<Product>? Products { get; set; }
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 
     private static Window _window = new Window("Varukorg", 125, 7);
     private static List<string> _emptyBasket = new List<string> { "Varukorgen är tom" };
+    public static Basket GuestBasket {  get; set; } = new Basket();
 
     public static void DrawBasket()
     {
@@ -24,13 +25,13 @@ internal class Basket
         }
         else
         {
-            basket = new Basket();
+            basket = GuestBasket;
         }
 
-        if (basket != null && basket.Products.Count > 0)
+        if (basket.Products != null && basket.Products.Count > 0)
         {
             var basketProducts = basket.Products.GroupBy(g => g.Name);
-            var productList = basketProducts.Select(g => $"{g.Key.PadRight(20)} {g.Count()} - {g.Select(s => s.Price).Sum()}Kr").ToList();
+            var productList = basketProducts.Select(g => $"{g.Key.PadRight(10)} {g.Count()}st - {g.Select(s => s.Price).Sum()}Kr").ToList();
             _window.TextRows = productList;
         }
         else

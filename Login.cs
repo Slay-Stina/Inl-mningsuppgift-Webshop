@@ -1,4 +1,5 @@
 ﻿using Inlämningsuppgift_Webshop.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,8 +34,8 @@ internal class Login
         {
             try
             {
-                ActiveUser = db.Users.Where(u => u.Username == username).FirstOrDefault();
-                if(ActiveUser != null)
+                ActiveUser = db.Users.Include(u => u.Basket.Products).FirstOrDefault(u => u.Username == username);
+                if (ActiveUser != null)
                 ActiveUser.LoggedIn = true;
             }
             catch (Exception ex)

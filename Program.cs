@@ -22,7 +22,8 @@ internal class Program
     static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
     {
         ConsoleKey.N,
-        ConsoleKey.R
+        ConsoleKey.R,
+        ConsoleKey.T
     };
 
     public static MainPage ActiveMainPage = MainPage.Startpage;
@@ -42,7 +43,14 @@ internal class Program
                     Start.Page();
                     break;
                 case MainPage.Admin:
-                    Admin.Page();
+                    if (Login.ActiveUser is not null && Login.ActiveUser.Admin)
+                    {
+                        Admin.Page();
+                    }
+                    else
+                    {
+                        ActiveMainPage = MainPage.Startpage;
+                    }
                     break;
             }
             if (!checkLogin.IsCompleted)
@@ -108,6 +116,8 @@ internal class Program
         switch (key)
         {
             case ConsoleKey.H:
+                if(ActiveSubPage != SubPage.Default)
+                    ActiveSubPage = SubPage.Default;
                 return MainPage.Startpage;
 
             case ConsoleKey.A:
@@ -127,8 +137,6 @@ internal class Program
 
     public static void SelectItem(ConsoleKey key)
     {
-        if (LoginKeys(key) || AdminKeys(key)) return;
-
         switch (key)
         {
             case ConsoleKey.A:
@@ -140,6 +148,18 @@ internal class Program
 
             default: break;
         }
+
+        if (LoginKeys(key) || AdminKeys(key) || StartKeys(key) ) return;
+    }
+
+    private static bool StartKeys(ConsoleKey key)
+    {
+        if(ActiveMainPage == MainPage.Startpage)
+        {
+            Start.SelectItem(key);
+            return true;
+        }
+        return false;
     }
 
     private static bool AdminKeys(ConsoleKey key)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -49,14 +50,13 @@ internal class Product
 
         // Skapa ett formulär för att lägga till produkten
         Window newProductWindow = new Window("Ny Produkt",  new List<string> {
-        "Namn:",
-        "Beskrivning:",
-        "Kategori/er:",
-        "Pris:",
-        "Lagerantal:",
-        "Featured ('J'a/'N'ej):".PadRight(50)
-    });
-
+            "Namn:",
+            "Beskrivning:",
+            "Kategori/er:",
+            "Pris:",
+            "Lagerantal:",
+            "Featured ('J'a/'N'ej):".PadRight(50)
+            });
         newProductWindow.Draw();
 
         // Läs in produktinformation
@@ -112,10 +112,35 @@ internal class Product
             // Lägg till produkten i databasen
             db.Products.Add(newProduct);
             db.SaveChanges();
+        }
+    }
 
-            // Framgångsmeddelande
-            Window successWindow = new Window("SUCCESS", "Produkten har lagts till!");
-            successWindow.Draw();
+    internal static void AddToBasket(List<Product> prodList, Window prodWindow)
+    {
+        string selectedRow = prodWindow.TextRows[(int)prodWindow.SelectedIndex];
+        Product product = prodList.FirstOrDefault(p => selectedRow.Contains(p.Name));
+
+        using (var db = new AdvNookContext())
+        {
+            if (product.Amount > 0)
+            {
+                if (Login.ActiveUser != null)
+                {
+                    Login.ActiveUser.Basket.Products.Add(product);
+                }
+                else
+                {
+                    Basket.GuestBasket.Products.Add(product);
+                }
+                product.Amount--;
+                db.Update(product);
+                db.SaveChanges();
+            }
+            else
+            {
+                Window noStockWindow = new Window("Lagerfel", $"{product.Name} hade tyvärr ett fel i lagersaldot och kunde inte läggas till.");
+                noStockWindow.Draw();
+            }
         }
     }
 

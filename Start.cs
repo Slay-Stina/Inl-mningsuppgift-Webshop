@@ -38,6 +38,21 @@ internal class Start
                 break;
         }
     }
+    public static void SelectItem(ConsoleKey key)
+    {
+        if (key == ConsoleKey.Enter)
+        {
+            switch (Program.ActiveSubPage)
+            {
+                case SubPage.Categories :
+                    //ListCatProd();
+                    break;
+                case SubPage.Products :
+                    Product.AddToBasket(_productpage, _pageWindow);
+                    break;
+            }
+        }
+    }
 
     private static void ListProducts()
     {
@@ -50,7 +65,7 @@ internal class Start
             productList = _productpage.Select(p => $"{p.Name} - {p.Price}").ToList();
         }
         _pageWindow.TextRows = productList;
-        _pageWindow.Draw();
+        _pageWindow.Navigate();
     }
 
     private static void ListCategories()
