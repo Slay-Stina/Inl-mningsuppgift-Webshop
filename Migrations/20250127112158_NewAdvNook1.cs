@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Inlämningsuppgift_Webshop.Migrations
+namespace Assignment_Webshop.Migrations
 {
     /// <inheritdoc />
     public partial class NewAdvNook1 : Migration

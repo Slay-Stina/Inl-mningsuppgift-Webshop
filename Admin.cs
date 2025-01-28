@@ -1,24 +1,35 @@
-﻿using Inlämningsuppgift_Webshop.Models;
+﻿using Assignment_Webshop.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Inlämningsuppgift_Webshop;
+namespace Assignment_Webshop;
 
 internal class Admin
 {
     private static List<string> _list = new List<string>
     {
-        "'H': Hem",
-        "'K': Hantera kategorier.",
-        "'P': Hantera produkter.",
-        "'U': Hantera användare.",
-        "'S': Hantera leverantörer."
+        "'H': Home",
+        "'C': Manage categories.",
+        "'P': Manage products.",
+        "'U': Manage users.",
+        "'S': Manage suppliers."
     };
-    private static Window _menu = new Window("Admin meny", 2, 0, _list);
-    private static Window _adminList { get; set; } = new Window( 2, 10);
+    private static Window _menu = new Window("Admin menu", 25, 0, _list);
+    private static Window _adminList { get; set; } = new Window(2, 10);
+    private static string _headerDefault = "- 'N'ew - 'E'dit - 'D'elete";
+    private static readonly Dictionary<SubPage, string> _subPageHeaders = new Dictionary<SubPage, string>
+    {
+        { SubPage.Categories, $"Categories {_headerDefault}" },
+        { SubPage.Products, $"Products {_headerDefault}" },
+        { SubPage.Users, $"Users {_headerDefault}" },
+        { SubPage.Suppliers, $"Suppliers {_headerDefault}" },
+        { SubPage.Default, $"Welcome to the Admin Panel!" }
+    };
+
 
     internal static void Page()
     {
         Banner();
+        UpdateHeader();
         _menu.Draw();
         switch (Program.ActiveSubPage)
         {
@@ -48,11 +59,11 @@ internal class Admin
                 {
                     Category.AddNewCategory();
                 }
-                else if (key == ConsoleKey.R)
+                else if (key == ConsoleKey.E)
                 {
-                    Category.EditCategory(_adminList,(int)_adminList.SelectedIndex);
+                    Category.EditCategory(_adminList, (int)_adminList.SelectedIndex);
                 }
-                else if (key == ConsoleKey.T)
+                else if (key == ConsoleKey.D)
                 {
                     Category.RemoveCategory(_adminList, (int)_adminList.SelectedIndex);
                 }
@@ -63,9 +74,13 @@ internal class Admin
                 {
                     Product.AddNewProduct();
                 }
-                else if (key == ConsoleKey.R)
+                else if (key == ConsoleKey.E)
                 {
                     Product.EditProduct();
+                }
+                else if (key == ConsoleKey.D)
+                {
+                    Product.RemoveProduct();
                 }
                 break;
 
@@ -74,9 +89,13 @@ internal class Admin
                 {
                     User.AddUser();
                 }
-                else if (key == ConsoleKey.R)
+                else if (key == ConsoleKey.E)
                 {
                     User.EditUser();
+                }
+                else if (key == ConsoleKey.D)
+                {
+                    User.RemoveUser();
                 }
                 break;
 
@@ -85,14 +104,28 @@ internal class Admin
                 {
                     Supplier.AddNewSupplier();
                 }
-                else if (key == ConsoleKey.R)
+                else if (key == ConsoleKey.E)
                 {
                     Supplier.EditSupplier();
+                }
+                else if (key == ConsoleKey.D)
+                {
+                    Supplier.RemoveSupplier();
                 }
                 break;
         }
     }
-
+    private static void UpdateHeader()
+    {
+        if (_subPageHeaders.TryGetValue(Program.ActiveSubPage, out string header))
+        {
+            _adminList.Header = header;
+        }
+        else
+        {
+            _adminList.Header = "Unknown Section"; // Fallback om en ny subpage saknas i ordboken
+        }
+    }
     private static void AdminProducts()
     {
         List<string> products = new List<string>();
@@ -105,12 +138,11 @@ internal class Admin
                     $"{p.Name.PadRight(20)}" +
                     $"{p.Price.ToString("C").PadRight(20)}" +
                     $"{p.Amount}".PadRight(20) +
-                    $"Featured: {(p.Featured ? "Ja" : "Nej")}".PadRight(20) +
+                    $"Featured: {(p.Featured ? "Yes" : "No")}".PadRight(20) +
                     $"{string.Join(", ", p.Categories.Select(c => c.Name))}"
                 ).ToList();
         }
         _adminList.TextRows = products.Count == 0 ? new List<string> { "" } : products;
-        _adminList.Header = $"Produkter - 'N'y - 'R'edigera - 'T'a bort";
 
         _adminList.Navigate();
     }
@@ -123,31 +155,46 @@ internal class Admin
             categories = db.Categories.Select(k => k.Name).ToList();
         }
         _adminList.TextRows = categories.Count == 0 ? new List<string> { "" } : categories;
-        _adminList.Header = $"Kategorier - 'N'y - 'R'edigera - 'T'a bort";
 
         _adminList.Navigate();
     }
 
     private static void AdminUsers()
     {
-        throw new NotImplementedException();
+        List<string> users = new List<string>();
+        using (var db = new AdvNookContext())
+        {
+            users = db.Users
+                .Select(u =>
+                    $"{u.Username.PadRight(20)}" +
+                    $"{u.Email.PadRight(30)}" +
+                    $"Admin: {(u.Admin ? "Yes" : "No")}"
+                ).ToList();
+        }
+        _adminList.TextRows = users.Count == 0 ? new List<string> { "No users found." } : users;
+
+        _adminList.Navigate();
     }
+
 
     private static void AdminSupplier()
     {
         List<string> suppliers = new List<string>();
+
         using (var db = new AdvNookContext())
         {
             suppliers = db.Suppliers.Select(s => s.Name).ToList();
         }
-        Window supplierList = new Window("Leverantörer - 'N'y - 'R'edigera - 'T'a bort", 35, 10, suppliers.Count == 0 ? new List<string> { "" } : suppliers);
-        //categoryList.Navigate(keyInfo.Key);
-        supplierList.Draw();
+
+        _adminList.TextRows = suppliers.Count == 0 ? new List<string> { "No suppliers found." } : suppliers;
+
+        _adminList.Navigate();
     }
+
 
     private static void Banner()
     {
-        List<string> admin = new List<string>{
+        List<string> bannerAlt = new List<string>{
             " █████╗ ██████╗ ███╗   ███╗██╗███╗   ██╗",
             "██╔══██╗██╔══██╗████╗ ████║██║████╗  ██║",
             "███████║██║  ██║██╔████╔██║██║██╔██╗ ██║",
@@ -155,7 +202,15 @@ internal class Admin
             "██║  ██║██████╔╝██║ ╚═╝ ██║██║██║ ╚████║",
             "╚═╝  ╚═╝╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝"
         };
-        Window title = new Window("", Console.WindowWidth / 4, 0, admin);
+        List<string> banner = new List<string>
+        {
+            "╔═╗╔╦╗╔╦╗╦╔╗╔",
+            "╠═╣ ║║║║║║║║║",
+            "╩ ╩═╩╝╩ ╩╩╝╚╝"
+        };
+        int bannerLength = banner[0].Length;
+        int leftPos = (Console.WindowWidth - bannerLength) / 2;
+        Window title = new Window("", leftPos, 0, banner);
         title.Draw();
     }
 }

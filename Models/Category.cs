@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inlämningsuppgift_Webshop.Models;
+namespace Assignment_Webshop.Models;
 
 internal class Category
 {

@@ -1,13 +1,7 @@
-﻿using Inlämningsuppgift_Webshop.Models;
+﻿using Assignment_Webshop.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Inlämningsuppgift_Webshop;
+namespace Assignment_Webshop;
 
 internal class Methods
 {
@@ -31,8 +25,8 @@ internal class Methods
     {
         try
         {
-            using(var db = new AdvNookContext())
-            { 
+            using (var db = new AdvNookContext())
+            {
                 Login.ActiveUser = await db.Users.Include(u => u.Basket.Products).FirstOrDefaultAsync(u => u.LoggedIn == true);
                 //Login.ActiveUser.Basket = db.Baskets.Where(b => b.Id == Login.ActiveUser.Basket.Id).FirstOrDefault();
             }
@@ -49,7 +43,7 @@ internal class Methods
         pressKey.Draw();
         while (Console.KeyAvailable == false)
         { }
-            return;
+        return;
     }
     public static void MiniMenu()
     {
@@ -87,7 +81,7 @@ internal class Methods
         ConsoleKeyInfo keyInfo = Console.ReadKey(true);
         if (Console.KeyAvailable)
         {
-            if(keyInfo.Key == ConsoleKey.DownArrow && SelectedIndex < list.Count)
+            if (keyInfo.Key == ConsoleKey.DownArrow && SelectedIndex < list.Count)
             {
                 SelectedIndex++;
             }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inlämningsuppgift_Webshop;
+﻿namespace Assignment_Webshop;
 
 public class Window
 {
@@ -129,7 +123,7 @@ public class Window
                 ? 0
                 : SelectedIndex + 1;
         }
-        
+
         Draw();
     }
 }
@@ -138,4 +132,3 @@ public static class Lowest
 {
     public static int LowestPosition { get; set; }
 }
-

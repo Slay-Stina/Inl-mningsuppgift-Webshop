@@ -1,23 +1,22 @@
-﻿using Inlämningsuppgift_Webshop.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using Assignment_Webshop.Models;
+using System.Text;
 
-namespace Inlämningsuppgift_Webshop;
+namespace Assignment_Webshop;
 
 internal class Program
 {
     static List<ConsoleKey> MainPageKeys { get; } = new List<ConsoleKey>
     {
         ConsoleKey.H,
-        ConsoleKey.A
+        ConsoleKey.A,
+        ConsoleKey.B
     };
     static List<ConsoleKey> SubPageKeys { get; } = new List<ConsoleKey>
     {
         ConsoleKey.P,
-        ConsoleKey.K,
+        ConsoleKey.C,
         ConsoleKey.U,
-        ConsoleKey.S
+        ConsoleKey.S,
     };
     static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
     {
@@ -26,12 +25,13 @@ internal class Program
         ConsoleKey.T
     };
 
-    public static MainPage ActiveMainPage = MainPage.Startpage;
+    public static MainPage ActiveMainPage = MainPage.Start;
     public static SubPage ActiveSubPage = SubPage.Default;
-    public static ConsoleKeyInfo KeyInfo {get; set;}
+    public static ConsoleKeyInfo KeyInfo { get; set; }
 
     static async Task Main(string[] args)
     {
+        Console.OutputEncoding = Encoding.UTF8;
         Task checkLogin = Methods.GetLoggedInUserAsync();
 
         while (true)
@@ -39,7 +39,7 @@ internal class Program
             Console.Clear();
             switch (ActiveMainPage)
             {
-                case MainPage.Startpage:
+                case MainPage.Start:
                     Start.Page();
                     break;
                 case MainPage.Admin:
@@ -49,21 +49,22 @@ internal class Program
                     }
                     else
                     {
-                        ActiveMainPage = MainPage.Startpage;
+                        ActiveMainPage = MainPage.Start;
                     }
+                    break;
+                case MainPage.Basket:
+                    Basket.Page();
                     break;
             }
             if (!checkLogin.IsCompleted)
             {
                 await checkLogin;
             }
-            
+
             Login.DrawLogin();
-            //DeleteBasket();
             Basket.DrawBasket();
 
             KeyInfo = Console.ReadKey(true);
-            //ConsoleKeyInfo keyInfo = Console.ReadKey(true);
             if (MainPageKeys.Contains(KeyInfo.Key))
             {
                 ActiveMainPage = SelectMainPage(KeyInfo.Key);
@@ -76,19 +77,6 @@ internal class Program
         }
     }
 
-    private static void DeleteBasket() // Ifall man behöver cleara varukorgar
-    {
-        using (var db = new AdvNookContext())
-        {
-            var b = db.Baskets.ToList();
-            foreach (var item in b)
-            {
-                db.Baskets.Remove(item);
-            }
-            db.SaveChanges();
-        }
-    }
-
     private static SubPage SelectSubPage(ConsoleKey key)
     {
         switch (key)
@@ -96,15 +84,15 @@ internal class Program
             case ConsoleKey.P:
                 return SubPage.Products;
 
-            case ConsoleKey.K:
+            case ConsoleKey.C:
                 return SubPage.Categories;
 
             case ConsoleKey.U:
                 return SubPage.Users;
 
             case ConsoleKey.S:
-                if(ActiveMainPage == MainPage.Admin)
-                    { return SubPage.Suppliers; }
+                if (ActiveMainPage == MainPage.Admin)
+                { return SubPage.Suppliers; }
                 else { return SubPage.Default; }
             default:
                 return SubPage.Default;
@@ -116,9 +104,9 @@ internal class Program
         switch (key)
         {
             case ConsoleKey.H:
-                if(ActiveSubPage != SubPage.Default)
+                if (ActiveSubPage != SubPage.Default)
                     ActiveSubPage = SubPage.Default;
-                return MainPage.Startpage;
+                return MainPage.Start;
 
             case ConsoleKey.A:
                 if (Login.ActiveUser is not null && Login.ActiveUser.Admin)
@@ -127,11 +115,13 @@ internal class Program
                 }
                 else
                 {
-                    return MainPage.Startpage;
+                    return MainPage.Start;
                 }
+            case ConsoleKey.B:
+                return MainPage.Basket;
 
             default:
-                return MainPage.Startpage;
+                return MainPage.Start;
         }
     }
 
@@ -149,12 +139,12 @@ internal class Program
             default: break;
         }
 
-        if (LoginKeys(key) || AdminKeys(key) || StartKeys(key) ) return;
+        if (LoginKeys(key) || AdminKeys(key) || StartKeys(key)) return;
     }
 
     private static bool StartKeys(ConsoleKey key)
     {
-        if(ActiveMainPage == MainPage.Startpage)
+        if (ActiveMainPage == MainPage.Start)
         {
             Start.SelectItem(key);
             return true;
@@ -174,7 +164,7 @@ internal class Program
 
     private static bool LoginKeys(ConsoleKey key)
     {
-        if(key == ConsoleKey.L)
+        if (key == ConsoleKey.L)
         {
             if (Login.ActiveUser is null)
             {

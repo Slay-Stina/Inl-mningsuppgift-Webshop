@@ -1,11 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Inlämningsuppgift_Webshop.Models;
+namespace Assignment_Webshop.Models;
 
 internal class Product
 {
@@ -21,130 +16,97 @@ internal class Product
 
     internal static void AddNewProduct()
     {
-        // Hämta alla leverantörer från databasen
         using (var db = new AdvNookContext())
         {
-        List<Supplier> suppliers;
-        suppliers = db.Suppliers.ToList();
-        
-        // Visa leverantörerna så användaren kan välja
-        Window suppliersWindow = new Window("Välj leverantör", suppliers.Select(s => $"{s.Id} {s.Name}").ToList());
-        suppliersWindow.Draw();
+            List<Supplier> suppliers = db.Suppliers.ToList();
 
-        // Låt användaren välja en leverantör
-        Console.SetCursorPosition(48, 18);
-        Console.WriteLine("Ange leverantörens nummer:");
-        int selectedSupplierId;
-        Console.SetCursorPosition(48, 19);
+            Window suppliersWindow = new Window("Select Supplier", suppliers.Select(s => $"{s.Id} {s.Name}").ToList());
+            suppliersWindow.Draw();
 
-        // Läs in användarens val
-        if (!int.TryParse(Console.ReadLine(), out selectedSupplierId) || !suppliers.Select(s => s.Id).Contains(selectedSupplierId))
-        {
-            // Felmeddelande om ogiltigt val
-            Window errorWindow = new Window("ERROR", "Ogiltigt leverantörsnummer!");
-            errorWindow.Draw();
-            return;
-        }
+            Console.SetCursorPosition(48, 18);
+            Console.WriteLine("Enter the supplier's number:");
+            int selectedSupplierId;
+            Console.SetCursorPosition(48, 19);
 
-        Supplier selectedSupplier = suppliers.Where(s => s.Id == selectedSupplierId).FirstOrDefault();
+            if (!int.TryParse(Console.ReadLine(), out selectedSupplierId) || !suppliers.Select(s => s.Id).Contains(selectedSupplierId))
+            {
+                // Error message for invalid selection
+                Window errorWindow = new Window("ERROR", "Invalid supplier number!");
+                errorWindow.Draw();
+                return;
+            }
 
-        // Skapa ett formulär för att lägga till produkten
-        Window newProductWindow = new Window("Ny Produkt",  new List<string> {
-            "Namn:",
-            "Beskrivning:",
-            "Kategori/er:",
-            "Pris:",
-            "Lagerantal:",
-            "Featured ('J'a/'N'ej):".PadRight(50)
-            });
-        newProductWindow.Draw();
+            Supplier selectedSupplier = suppliers.Where(s => s.Id == selectedSupplierId).FirstOrDefault();
 
-        // Läs in produktinformation
-        Console.SetCursorPosition(57, 21);
-        string name = Console.ReadLine();
-
-        Console.SetCursorPosition(64, 22);
-        string description = Console.ReadLine();
-
-        // Hämta alla kategorier från databasen
-        List<Category> categories;
-
-        categories = db.Categories.ToList();
-
-        // Visa kategorierna så användaren kan välja
-        Window categoriesWindow = new Window("Välj kategorier (separera med ',')",50,29, categories.Select(c => $"{c.Id} {c.Name}").ToList());
-        categoriesWindow.Draw();
-
-        // Låt användaren välja kategorier
-        Console.SetCursorPosition(64, 23);
-        string categoryInput = Console.ReadLine();
-
-        // Tolka användarens val
-        List<int> selectedCategoryIds = categoryInput.Split(',')
-            .Where(id => int.TryParse(id.Trim(), out _))
-            .Select(id => int.Parse(id.Trim()))
-            .ToList();
-
-        List<Category> selectedCategories = categories.Where(c => selectedCategoryIds.Contains(c.Id)).ToList();
-
-        Console.SetCursorPosition(57, 24);
-        decimal price = Methods.Checkint();
-
-        Console.SetCursorPosition(63, 25);
-        int amount = Methods.Checkint();
-
-        Console.SetCursorPosition(74, 26);
-        bool featured = Console.ReadKey().Key == ConsoleKey.J ? true : false;
-
-        // Skapa den nya produkten
+            Window productForm = new Window("New Product", 125, 0, new List<string> {
+            "Name:",
+            "Description:",
+            "Category/ies (separate with ','):",
+            "Price:",
+            "Stock Quantity:",
+            "Featured ('Y'es/'N'o):"
+        });
+            productForm.Draw();
 
             Product newProduct = new Product
             {
-                Name = name,
-                Description = description,
-                Price = price,
-                Amount = amount,
-                Featured = featured,
-                Supplier = selectedSupplier,
-                Categories = selectedCategories
+                Supplier = selectedSupplier
             };
 
-            // Lägg till produkten i databasen
+            foreach (string row in productForm.TextRows)
+            {
+                int index = productForm.TextRows.IndexOf(row);
+                Console.SetCursorPosition(127 + row.Length, index + 1);
+                switch (index)
+                {
+                    case 0:
+                        newProduct.Name = Console.ReadLine();
+                        break;
+                    case 1:
+                        newProduct.Description = Console.ReadLine();
+                        break;
+                    case 2:
+                        string categoryInput = Console.ReadLine();
+                        List<int> selectedCategoryIds = categoryInput.Split(',')
+                            .Where(id => int.TryParse(id.Trim(), out _))
+                            .Select(id => int.Parse(id.Trim()))
+                            .ToList();
+                        List<Category> selectedCategories = db.Categories.Where(c => selectedCategoryIds.Contains(c.Id)).ToList();
+                        newProduct.Categories = selectedCategories;
+                        break;
+                    case 3:
+                        newProduct.Price = Methods.Checkint();
+                        break;
+                    case 4:
+                        newProduct.Amount = Methods.Checkint();
+                        break;
+                    case 5:
+                        newProduct.Featured = Console.ReadKey().Key == ConsoleKey.Y ? true : false;
+                        break;
+                }
+            }
+
+            // Add the product to the database
             db.Products.Add(newProduct);
             db.SaveChanges();
-        }
-    }
 
-    internal static void AddToBasket(List<Product> prodList, Window prodWindow)
-    {
-        string selectedRow = prodWindow.TextRows[(int)prodWindow.SelectedIndex];
-        Product product = prodList.FirstOrDefault(p => selectedRow.Contains(p.Name));
-
-        using (var db = new AdvNookContext())
-        {
-            if (product.Amount > 0)
-            {
-                if (Login.ActiveUser != null)
-                {
-                    Login.ActiveUser.Basket.Products.Add(product);
-                }
-                else
-                {
-                    Basket.GuestBasket.Products.Add(product);
-                }
-                product.Amount--;
-                db.Update(product);
-                db.SaveChanges();
-            }
-            else
-            {
-                Window noStockWindow = new Window("Lagerfel", $"{product.Name} hade tyvärr ett fel i lagersaldot och kunde inte läggas till.");
-                noStockWindow.Draw();
-            }
+            // Success window
+            Window successWindow = new Window("Product Added", new List<string> {
+            $"The product {newProduct.Name} has been added.",
+            "Press any key to continue..."
+        });
+            successWindow.Draw();
+            while (Console.KeyAvailable == false)
+            { }
         }
     }
 
     internal static void EditProduct()
+    {
+        throw new NotImplementedException();
+    }
+
+    internal static void RemoveProduct()
     {
         throw new NotImplementedException();
     }

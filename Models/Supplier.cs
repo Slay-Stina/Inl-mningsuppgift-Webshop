@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inlämningsuppgift_Webshop.Models;
+﻿namespace Assignment_Webshop.Models;
 
 internal class Supplier
 {
@@ -14,7 +8,7 @@ internal class Supplier
 
     internal static void AddNewSupplier()
     {
-        Window newSup = new Window("Ny leverantör", 75, 10, new List<string> { 
+        Window newSup = new Window("Ny leverantör", 75, 10, new List<string> {
             "Namn:".PadRight(20),
             "Land:".PadRight(20)
         });
@@ -33,6 +27,11 @@ internal class Supplier
     }
 
     internal static void EditSupplier()
+    {
+        throw new NotImplementedException();
+    }
+
+    internal static void RemoveSupplier()
     {
         throw new NotImplementedException();
     }

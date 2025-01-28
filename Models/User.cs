@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inlämningsuppgift_Webshop.Models;
+﻿namespace Assignment_Webshop.Models;
 
 internal class User
 {
@@ -24,13 +18,13 @@ internal class User
     {
         using (var db = new AdvNookContext())
         {
-            Window userForm = new Window("Ny Användare", 125,0, new List<string> {
-            "Förnamn:",
-            "Efternamn:",
-            "Ålder:",
-            "E-Post:",
-            "Adress:",
-            "Stad:",
+            Window userForm = new Window("New User", 125, 0, new List<string> {
+            "First Name:",
+            "Last Name:",
+            "Age:",
+            "Email:",
+            "Address:",
+            "City:",
             "".PadRight(20),
             });
             userForm.Draw();
@@ -69,9 +63,9 @@ internal class User
             db.Users.Add(newUser);
             db.SaveChanges();
 
-            Window successWindow = new Window("Användare tillagd", new List<string> {
-            $"Ditt användarnamn är {newUser.Username}",
-            "Tryck på valfri knapp för att fortsätta...",
+            Window successWindow = new Window("User Added", new List<string> {
+            $"Your username is {newUser.Username}",
+            "Press any key to continue...",
             });
             successWindow.Draw();
             while (Console.KeyAvailable == false)
@@ -81,6 +75,11 @@ internal class User
     }
 
     internal static void EditUser()
+    {
+        throw new NotImplementedException();
+    }
+
+    internal static void RemoveUser()
     {
         throw new NotImplementedException();
     }
