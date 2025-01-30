@@ -6,7 +6,7 @@ internal class Basket
 {
     public int Id { get; set; }
     public virtual ICollection<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
-    private static string _header => "'B'asket" + (Program.ActiveSubPage == SubPage.Basket ? " - ↑↓ Navigate - ←→ Change quantity" : "");
+    private static string _header => "'B'asket - Check'O'ut" + (Program.ActiveSubPage == SubPage.Basket ? " - ↑↓ Navigate - ←→ Change quantity" : "");
     private static Window _window = new Window(_header, 95, 0);
     private static List<string> _emptyBasket = new List<string> { "The basket is empty" };
     public static Basket GuestBasket { get; set; } = new Basket();

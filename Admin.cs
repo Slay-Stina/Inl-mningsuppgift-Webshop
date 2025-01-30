@@ -11,7 +11,8 @@ internal class Admin
         "'C': Manage categories.",
         "'P': Manage products.",
         "'U': Manage users.",
-        "'S': Manage suppliers."
+        "'S': Manage suppliers.",
+        "'O': Manage orders."
     };
     private static Window _menu = new Window("Admin menu", 25, 0, _list);
     private static Window _adminList { get; set; } = new Window(2, 7);
@@ -24,7 +25,6 @@ internal class Admin
         { SubPage.Suppliers, $"Suppliers {_headerDefault}" },
         { SubPage.Default, $"Welcome to the Admin Panel!" }
     };
-
 
     internal static void Page()
     {
@@ -47,7 +47,15 @@ internal class Admin
             case SubPage.Suppliers:
                 AdminSupplier();
                 break;
+            case SubPage.Checkout:
+                AdminOrders();
+                break;
         }
+    }
+
+    private static void AdminOrders()
+    {
+        throw new NotImplementedException();
     }
 
     public static void SelectAdminItem(ConsoleKey key)

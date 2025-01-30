@@ -10,5 +10,5 @@ public class Shipping
 {
     public int Id { get; set; }
     public string Type { get; set; }
-    public float Price { get; set; }
+    public decimal Price { get; set; }
 }

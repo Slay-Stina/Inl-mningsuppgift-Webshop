@@ -1,4 +1,5 @@
 ﻿using Assignment_Webshop.Models;
+using Inlämningsuppgift_Webshop;
 using System.Text;
 
 namespace Assignment_Webshop;
@@ -8,7 +9,7 @@ internal class Program
     static List<ConsoleKey> MainPageKeys { get; } = new List<ConsoleKey>
     {
         ConsoleKey.H,
-        ConsoleKey.A,
+        ConsoleKey.A
     };
     static List<ConsoleKey> SubPageKeys { get; } = new List<ConsoleKey>
     {
@@ -16,7 +17,8 @@ internal class Program
         ConsoleKey.C,
         ConsoleKey.U,
         ConsoleKey.B,
-        ConsoleKey.S
+        ConsoleKey.S,
+        ConsoleKey.O
     };
     static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
     {
@@ -93,6 +95,9 @@ internal class Program
 
             case ConsoleKey.B:
                 return SubPage.Basket;
+
+            case ConsoleKey.O:
+                return SubPage.Checkout;
 
             default:
                 return SubPage.Default;
@@ -183,5 +188,11 @@ internal class Program
             return true;
         }
         return false;
+    }
+
+    internal static void CloseAllDbConnections()
+    {
+        var db = new AdvNookContext();
+        db.Dispose();
     }
 }

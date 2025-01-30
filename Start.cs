@@ -50,6 +50,9 @@ internal class Start
             case SubPage.ProductDetails:
                 ProductDetails();
                 break;
+            case SubPage.Checkout:
+                Checkout();
+                break;
         }
     }
 
@@ -104,32 +107,33 @@ internal class Start
 
     internal static void ProductDetails()
     {
+        Product product;
         using (var db = new AdvNookContext())
         {
             string selectedRow = PageWindow.TextRows[(int)PageWindow.SelectedIndex];
-            Product product = db.Products
+            product = db.Products
                                 .Include(p => p.Categories)
                                 .FirstOrDefault(p => selectedRow.Contains(p.Name));
 
-            List<string> details = new List<string>
-            {
-                $"Price: {product.Price.ToString("C")}",
-                $"Categories: {string.Join(", ", product.Categories.Select(c => c.Name))}",
-                ""
-            };
+        }
+        List<string> details = new List<string>
+        {
+            $"Price: {product.Price.ToString("C")}",
+            $"Categories: {string.Join(", ", product.Categories.Select(c => c.Name))}",
+            ""
+        };
 
-            details.AddRange(Methods.WrapText(product.Description, 40));
+        details.AddRange(Methods.WrapText(product.Description, 40));
 
-            details.AddRange("", "'Enter' to add to cart");
+        details.AddRange("", "'Enter' to add to cart");
 
-            Window productDetailWindow = new Window($"{product.Name}", 50, 10, details);
-            productDetailWindow.Draw();
-            PageWindow.Draw();
+        Window productDetailWindow = new Window($"{product.Name}", 50, 10, details);
+        productDetailWindow.Draw();
+        PageWindow.Draw();
 
-            if (Program.KeyInfo.Key == ConsoleKey.Enter)
-            {
-                Basket.AddProductToBasket(product);
-            }
+        if (Program.KeyInfo.Key == ConsoleKey.Enter)
+        {
+            Basket.AddProductToBasket(product);
         }
     }
 
@@ -241,6 +245,110 @@ internal class Start
                     Basket.AddProductToBasket(featuredProducts[productIndex]);
                 }
                 break;
+        }
+    }
+    public static void Checkout()
+    {
+        Program.CloseAllDbConnections();
+        using (var db = new AdvNookContext())
+        {
+            // Hämta aktuell varukorg
+            Basket basket = Login.ActiveUser != null ? Login.ActiveUser.Basket : Basket.GuestBasket;
+
+            if (basket.BasketProducts == null || basket.BasketProducts.Count == 0)
+            {
+                Window errorWindow = new Window("ERROR", "Your basket is empty!");
+                errorWindow.Draw();
+                return;
+            }
+
+            // Steg 1: Visa fraktalternativ och låt användaren välja
+            List<Shipping> shippings = db.Shippings.ToList();
+            Window shippingWindow = new Window("Enter shipping ID:", 25, 10, shippings
+                .Select(s =>
+                $"{s.Id}".PadRight(10) +
+                $"{s.Type}".PadRight(20) +
+                $"{s.Price:C}".PadRight(20)
+                ).ToList());
+
+            List<string> shipHeader = new List<string>
+        {
+            "",
+            "ID".PadRight(10) + "Type".PadRight(20) + "Price".PadRight(20)
+        };
+            shippingWindow.TextRows.InsertRange(0, shipHeader);
+            shippingWindow.Draw();
+
+            // Placera markören för användarens input
+            Console.SetCursorPosition(26, 11);
+
+            int selectedShippingId;
+            if (!int.TryParse(Console.ReadLine(), out selectedShippingId) || !shippings.Any(s => s.Id == selectedShippingId))
+            {
+                Console.Clear();
+                Window errorWindow = new Window("ERROR", "Invalid shipping ID!");
+                errorWindow.Draw();
+                return;
+            }
+
+            Shipping selectedShipping = shippings.First(s => s.Id == selectedShippingId);
+
+            // Steg 2: Skapa order
+            Order newOrder = new Order
+            {
+                Status = OrderStatus.Pending,
+                UserId = Login.ActiveUser != null ? Login.ActiveUser.Id : 0, // 0 för gäster
+                ShippingId = selectedShipping.Id,
+                OrderDate = DateTime.Now
+            };
+
+            db.Orders.Add(newOrder);
+
+            // Steg 3: Lägg till orderdetaljer
+            foreach (var basketProduct in basket.BasketProducts)
+            {
+                OrderDetail orderDetail = new OrderDetail
+                {
+                    OrderId = newOrder.Id,
+                    ProductId = basketProduct.Product.Id,
+                    Quantity = basketProduct.Quantity,
+                    UnitPrice = basketProduct.Product.Price
+                };
+
+                db.OrderDetails.Add(orderDetail);
+
+                // Uppdatera lager
+                basketProduct.Product.Amount -= basketProduct.Quantity;
+                db.Update(basketProduct.Product);
+            }
+
+            // Beräkna totalkostnad innan varukorgen rensas
+            decimal totalCost = selectedShipping.Price +
+                                basket.BasketProducts.Sum(bp => bp.Quantity * bp.Product.Price);
+
+            // Töm varukorgen
+            basket.BasketProducts.Clear();
+
+            // Spara alla ändringar
+            db.SaveChanges();
+
+            // Steg 4: Visa orderbekräftelse
+            List<string> confirmationText = new List<string>
+            {
+                "Order Confirmation:",
+                $"Order ID: {newOrder.Id}",
+                $"Shipping: {selectedShipping.Type} ({selectedShipping.Price:C})",
+                $"Total Cost: {totalCost:C}",
+                "",
+                "Your order has been placed successfully!",
+                "Press any key to return to the main menu..."
+            };
+
+            Window confirmationWindow = new Window("Order Confirmation", confirmationText);
+            confirmationWindow.Draw();
+
+            while (Console.KeyAvailable == false) { }
+            Program.ActiveSubPage = SubPage.Default;
         }
     }
 

@@ -31,11 +31,10 @@ internal class Login
         {
             try
             {
-                // Hämta användaren och inkludera deras varukorg och produkter via BasketProduct
                 ActiveUser = db.Users
                                .Include(u => u.Basket)
-                               .ThenInclude(b => b.BasketProducts) // Inkludera BasketProducts
-                               .ThenInclude(bp => bp.Product) // Inkludera produkterna som är kopplade via BasketProduct
+                               .ThenInclude(b => b.BasketProducts)
+                               .ThenInclude(bp => bp.Product)
                                .FirstOrDefault(u => u.Username == username);
 
                 if (ActiveUser != null)
@@ -52,6 +51,10 @@ internal class Login
             {
                 Console.WriteLine("An error occurred while trying to find the user.");
                 Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                db.SaveChanges();
             }
         }
     }
