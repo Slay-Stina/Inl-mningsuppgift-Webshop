@@ -128,42 +128,8 @@ internal class Start
 
             if (Program.KeyInfo.Key == ConsoleKey.Enter)
             {
-                AddToBasket(product, db);
+                Basket.AddProductToBasket(product);
             }
-        }
-    }
-    internal static void AddToBasket(Product product, AdvNookContext? db = null)
-    {
-        if (product.Amount <= 0)
-        {
-            Window noStockWindow = new Window("Stock Error", $"{product.Name} is out of stock and could not be added.");
-            noStockWindow.Draw();
-            return;
-        }
-
-        var userBasket = Login.ActiveUser != null
-            ? db.Baskets.Include(b => b.BasketProducts).ThenInclude(bp => bp.Product).FirstOrDefault(b => b.Id == Login.ActiveUser.Basket.Id)
-            : Basket.GuestBasket;
-
-        if (userBasket != null)
-        {
-            var existingProduct = userBasket.BasketProducts.FirstOrDefault(bp => bp.ProductId == product.Id);
-
-            if (existingProduct != null)
-            {
-                existingProduct.Quantity++;
-            }
-            else
-            {
-                userBasket.BasketProducts.Add(new BasketProduct
-                {
-                    ProductId = product.Id,
-                    Product = product,
-                    Quantity = 1
-                });
-            }
-
-            db.SaveChanges();
         }
     }
 
@@ -260,7 +226,7 @@ internal class Start
         };
             featureDetails.AddRange(Methods.WrapText(product.Description, 30));
 
-            Window featuredWindow = new Window($"{xyz[i]}", 2 + (35 * i), 10, featureDetails);
+            Window featuredWindow = new Window($"'{xyz[i]}' - Add to basket", 2 + (35 * i), 10, featureDetails);
             featuredWindow.Draw();
         }
 
@@ -269,10 +235,10 @@ internal class Start
             case ConsoleKey.X:
             case ConsoleKey.Y:
             case ConsoleKey.Z:
-                int selectedProductIndex = Array.IndexOf(xyz, Program.KeyInfo.KeyChar);
-                if (selectedProductIndex >= 0 && selectedProductIndex < featuredProducts.Count)
+                int productIndex = Array.IndexOf(xyz, Char.ToUpper(Program.KeyInfo.KeyChar));
+                if (productIndex >= 0 && productIndex < featuredProducts.Count)
                 {
-                    AddToBasket(featuredProducts[selectedProductIndex]);
+                    Basket.AddProductToBasket(featuredProducts[productIndex]);
                 }
                 break;
         }

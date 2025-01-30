@@ -14,7 +14,7 @@ internal class Admin
         "'S': Manage suppliers."
     };
     private static Window _menu = new Window("Admin menu", 25, 0, _list);
-    private static Window _adminList { get; set; } = new Window(2, 10);
+    private static Window _adminList { get; set; } = new Window(2, 7);
     private static string _headerDefault = "- 'N'ew - 'E'dit - 'D'elete";
     private static readonly Dictionary<SubPage, string> _subPageHeaders = new Dictionary<SubPage, string>
     {
@@ -135,17 +135,26 @@ internal class Admin
             products = db.Products
                 .Include(p => p.Categories)
                 .Select(p =>
-                    $"{p.Name.PadRight(20)}" +
-                    $"{p.Price.ToString("C").PadRight(20)}" +
-                    $"{p.Amount}".PadRight(20) +
-                    $"Featured: {(p.Featured ? "Yes" : "No")}".PadRight(20) +
+                    $"{p.Name.PadRight(35)}" +
+                    $"{p.Price.ToString("C").PadRight(15)}" +
+                    $"{p.Amount.ToString().PadRight(10)}" +
+                    $"{(p.Featured ? "Yes" : "No").PadRight(20)}" +
                     $"{string.Join(", ", p.Categories.Select(c => c.Name))}"
                 ).ToList();
         }
-        _adminList.TextRows = products.Count == 0 ? new List<string> { "" } : products;
+
+        List<string> tableHeader = new List<string>
+        {
+            $"{"Name".PadRight(35)}{"Price".PadRight(15)}{"Amount".PadRight(10)}{"Featured".PadRight(20)}{"Categories"}"
+        };
+
+        products.Insert(0, tableHeader[0]);
+
+        _adminList.TextRows = products.Count == 0 ? new List<string> { "No products available." } : products;
 
         _adminList.Navigate();
     }
+
 
     private static void AdminCategories()
     {
@@ -166,11 +175,20 @@ internal class Admin
         {
             users = db.Users
                 .Select(u =>
+                    $"{u.FirstName} {u.LastName}".PadRight(30) +
                     $"{u.Username.PadRight(20)}" +
                     $"{u.Email.PadRight(30)}" +
-                    $"Admin: {(u.Admin ? "Yes" : "No")}"
+                    $"{(u.Admin ? "Yes" : "No")}".PadRight(20)
                 ).ToList();
         }
+
+        List<string> tableHeader = new List<string>
+        {
+            $"{"Name".PadRight(30)}{"Username".PadRight(20)}{"Email".PadRight(30)}{"Admin".PadRight(15)}"
+        };
+
+        users.Insert(0, tableHeader[0]);
+
         _adminList.TextRows = users.Count == 0 ? new List<string> { "No users found." } : users;
 
         _adminList.Navigate();
@@ -183,7 +201,11 @@ internal class Admin
 
         using (var db = new AdvNookContext())
         {
-            suppliers = db.Suppliers.Select(s => s.Name).ToList();
+            suppliers = db.Suppliers
+                .Select(s => 
+                    $"{s.Name.PadRight(20)}" +
+                    $"{s.Country}"
+            ).ToList();
         }
 
         _adminList.TextRows = suppliers.Count == 0 ? new List<string> { "No suppliers found." } : suppliers;

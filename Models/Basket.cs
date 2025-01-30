@@ -29,6 +29,31 @@ internal class Basket
             _window.Draw();
         }
     }
+    public static void AddProductToBasket(Product product)
+    {
+        // Lägg till produkten i den aktuella varukorgen
+        var basketProduct = _currentBasket.BasketProducts
+            .FirstOrDefault(bp => bp.ProductId == product.Id);
+
+        if (basketProduct != null)
+        {
+            basketProduct.Quantity++;
+        }
+        else
+        {
+            _currentBasket.BasketProducts.Add(new BasketProduct { Product = product, Quantity = 1 });
+        }
+
+        // Uppdatera varukorgen i databasen
+        using (var db = new AdvNookContext())
+        {
+            db.SaveChanges();
+        }
+
+        // Uppdatera och rita om varukorgen
+        _currentBasket = Login.ActiveUser != null ? Login.ActiveUser.Basket : GuestBasket;
+        DrawBasket();  // Omritar varukorgen efter produktlägget
+    }
 
     public static void ChangeQuantity()
     {
@@ -68,9 +93,19 @@ internal class Basket
             var basketProducts = _currentBasket.BasketProducts
                 .GroupBy(bp => bp.Product.Name)
                 .Select(g =>
-                    $"{g.Sum(bp => bp.Quantity)}st {g.Key.PadRight(30)} - {g.Sum(bp => bp.Quantity * bp.Product.Price):C}"
-                )
+                {
+                    var quantityAndName = $"{g.Sum(bp => bp.Quantity)}st {g.Key.PadRight(30)}";
+                    var price = $"{g.Sum(bp => bp.Quantity * bp.Product.Price):C}".PadLeft(15);
+                    return $"{quantityAndName}{price}";
+                })
                 .ToList();
+
+            decimal totalPrice = _currentBasket.BasketProducts
+                .Sum(bp => bp.Quantity * bp.Product.Price);
+
+            basketProducts.Add(new string('-', 50));
+            basketProducts.Add($"Total: {totalPrice:C}".PadLeft(50));
+
             _window.TextRows = basketProducts;
         }
         else

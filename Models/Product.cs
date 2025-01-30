@@ -19,44 +19,48 @@ internal class Product
     {
         using (var db = new AdvNookContext())
         {
+            //hämtar Leverantörer------------------------------
             List<Supplier> suppliers = db.Suppliers.ToList();
 
-            Window suppliersWindow = new Window("Select Supplier", suppliers.Select(s => $"{s.Id} {s.Name}").ToList());
-            suppliersWindow.Draw();
+            Window suppliersWindow = new Window("Enter Supplier ID", 20, 30, suppliers.Select(s => $"{s.Id}".PadRight(3) + $" {s.Name}").ToList());
 
-            Console.SetCursorPosition(48, 18);
-            Console.WriteLine("Enter the supplier's number:");
-            int selectedSupplierId;
-            Console.SetCursorPosition(48, 19);
-
-            if (!int.TryParse(Console.ReadLine(), out selectedSupplierId) || !suppliers.Select(s => s.Id).Contains(selectedSupplierId))
+            List<string> supHeader = new List<string>
             {
-                Window errorWindow = new Window("ERROR", "Invalid supplier number!");
-                errorWindow.Draw();
-                return;
-            }
+                "",
+                "ID".PadRight(3) + " Name"
+            };
+            suppliersWindow.TextRows.InsertRange(0, supHeader);
 
-            Supplier selectedSupplier = suppliers.FirstOrDefault(s => s.Id == selectedSupplierId);
+            //Hämtar kategorier ---------------------------------------
 
-            Window productForm = new Window("New Product", 125, 0, new List<string> {
+            List<Category> categories = db.Categories.ToList();
+
+            Window categoryWindow = new Window("", 20, 30, categories.Select(c => $"{c.Id}".PadRight(3) + $" {c.Name}").ToList());
+
+            List<string> catHeader = new List<string>
+            {
+                "ID".PadRight(3) + " Name"
+            };
+            categoryWindow.TextRows.InsertRange(0, catHeader);
+
+            Window productForm = new Window("New Product", 20, 20, new List<string> {
                 "Name:",
                 "Description:",
                 "Category/ies (separate with ','):",
+                "Supplier:",
                 "Price:",
                 "Stock Quantity:",
-                "Featured ('Y'es/'N'o):"
+                "Featured ('Y'es/'N'o):",
+                "".PadRight(100)
             });
             productForm.Draw();
 
-            Product newProduct = new Product
-            {
-                Supplier = selectedSupplier
-            };
+            Product newProduct = new Product();
 
             foreach (string row in productForm.TextRows)
             {
                 int index = productForm.TextRows.IndexOf(row);
-                Console.SetCursorPosition(127 + row.Length, index + 1);
+                Console.SetCursorPosition(23 + row.Length, index + 21);
                 switch (index)
                 {
                     case 0:
@@ -66,6 +70,8 @@ internal class Product
                         newProduct.Description = Console.ReadLine();
                         break;
                     case 2:
+                        categoryWindow.Draw();
+                        Console.SetCursorPosition(23 + row.Length, index + 21);
                         string categoryInput = Console.ReadLine();
                         List<int> selectedCategoryIds = categoryInput.Split(',')
                             .Where(id => int.TryParse(id.Trim(), out _))
@@ -75,12 +81,21 @@ internal class Product
                         newProduct.Categories = selectedCategories;
                         break;
                     case 3:
-                        newProduct.Price = Methods.Checkint();
+                        suppliersWindow.Draw();
+                        Console.SetCursorPosition(23 + row.Length, index + 21);
+                        int selectedSupplierId;
+                        if (int.TryParse(Console.ReadLine(), out selectedSupplierId))
+                        {
+                            newProduct.Supplier = suppliers.FirstOrDefault(s => s.Id == selectedSupplierId);
+                        }
                         break;
                     case 4:
-                        newProduct.Amount = Methods.Checkint();
+                        newProduct.Price = Methods.Checkint();
                         break;
                     case 5:
+                        newProduct.Amount = Methods.Checkint();
+                        break;
+                    case 6:
                         newProduct.Featured = Console.ReadKey().Key == ConsoleKey.Y ? true : false;
                         break;
                 }
@@ -107,7 +122,7 @@ internal class Product
             var product = db.Products.Include(p => p.Categories).FirstOrDefault(p => p.Name == itemName);
             if (product != null)
             {
-                Window editProductWindow = new Window($"Edit {product.Name}", new List<string>
+                Window editProductWindow = new Window($"Edit {product.Name}", 10, 20, new List<string>
             {
                 "Name:".PadRight(20) + product.Name,
                 "Description:".PadRight(20) + product.Description,
@@ -164,7 +179,7 @@ internal class Product
                 db.Products.Update(product);
                 db.SaveChanges();
 
-                Window successWindow = new Window("Product Updated", new List<string> 
+                Window successWindow = new Window("Product Updated", new List<string>
                 { $"The product {product.Name} has been updated.", "Press any key to continue..." });
                 successWindow.Draw();
                 while (Console.KeyAvailable == false) { }
@@ -183,7 +198,7 @@ internal class Product
                 db.Products.Remove(product);
                 db.SaveChanges();
 
-                Window successWindow = new Window("Product Deleted", new List<string> 
+                Window successWindow = new Window("Product Deleted", new List<string>
                 { $"The product {product.Name} has been deleted.", "Press any key to continue..." });
                 successWindow.Draw();
                 while (Console.KeyAvailable == false) { }
