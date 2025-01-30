@@ -14,69 +14,74 @@ internal class Category
 
     internal static void AddNewCategory()
     {
-        Window newCat = new Window("Ny Kategori", new List<string> { "Namn:".PadRight(20) });
-        newCat.Draw();
+        Window newCategoryWindow = new Window("New Category", new List<string> { "Name:".PadRight(20) });
+        newCategoryWindow.Draw();
         Console.SetCursorPosition(51, 21);
+
         using (var db = new AdvNookContext())
         {
-            string catName = Console.ReadLine();
-            if (catName is not "" && catName is not null)
+            string categoryName = Console.ReadLine();
+            if (!string.IsNullOrEmpty(categoryName))
             {
-                db.Categories.Add(new Category { Name = catName });
+                db.Categories.Add(new Category { Name = categoryName });
                 db.SaveChanges();
             }
-            else
-            {
-                Window error = new Window("ERROR","Det du angett har blivit fel.");
-                error.Draw();
-            }
         }
     }
 
-    internal static void EditCategory(Window list, int index)
+    internal static void EditCategory(Window _adminList, int index)
     {
-        string item = list.TextRows[index];
+        string item = _adminList.TextRows[index];
         using (var db = new AdvNookContext())
         {
-            var category = db.Categories.Where(c => c.Name == item).FirstOrDefault();
+            var category = db.Categories.FirstOrDefault(c => c.Name == item);
             if (category != null)
             {
-                Window editCat = new Window("Redigera Kategori", new List<string> { "Nytt Namn:".PadRight(20) });
-                editCat.Draw();
+                Window editCatForm = new Window("Edit Category", new List<string> {
+                "New Name:"
+            });
+                editCatForm.Draw();
+
                 Console.SetCursorPosition(51, 21);
-                string catName = Console.ReadLine();
-                if (catName is not "" && catName is not null)
+                string newName = Console.ReadLine();
+
+                if (!string.IsNullOrEmpty(newName))
                 {
-                    try
-                    { 
-                        category.Name = catName; 
-                        db.Categories.Update(category); 
-                    }
-                    catch (Exception e) 
-                    { Console.WriteLine(e.InnerException); }
-                    finally
-                    { db.SaveChanges(); }
-                }
-                else
-                {
-                    Window error = new Window("ERROR", "Det du angett har blivit fel.");
-                    error.Draw();
+                    category.Name = newName;
+                    db.Categories.Update(category);
+                    db.SaveChanges();
+
+                    Window successWindow = new Window("Category Edited", new List<string> {
+                    $"The category name has been updated to {category.Name}.",
+                    "Press any key to continue..."
+                });
+                    successWindow.Draw();
+                    while (Console.KeyAvailable == false)
+                    { }
                 }
             }
         }
     }
 
-    internal static void RemoveCategory(Window list, int index)
+    internal static void RemoveCategory(Window _adminList, int index)
     {
-        string item = list.TextRows[index];
+        string item = _adminList.TextRows[index];
         using (var db = new AdvNookContext())
         {
-            var category = db.Categories.Where(c => c.Name == item).FirstOrDefault();
-            try
-            { db.Categories.Remove(category);
+            var category = db.Categories.FirstOrDefault(c => c.Name == item);
+            if (category != null)
+            {
+                db.Categories.Remove(category);
+                db.SaveChanges();
+
+                Window successWindow = new Window("Category Removed", new List<string> {
+                $"The category {category.Name} has been removed.",
+                "Press any key to continue..."
+            });
+                successWindow.Draw();
+                while (Console.KeyAvailable == false)
+                { }
             }
-            finally
-            { db.SaveChanges(); }
         }
     }
 }

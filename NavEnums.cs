@@ -4,7 +4,8 @@ internal enum MainPage
 {
     Start,
     Admin,
-    Basket
+    Basket,
+    Checkout
 }
 internal enum SubPage
 {
@@ -13,5 +14,7 @@ internal enum SubPage
     Products,
     Users,
     Suppliers,
-    ProductDetails    
+    ProductDetails,
+    CategoryProducts,
+    Search
 }

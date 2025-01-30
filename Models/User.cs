@@ -74,13 +74,101 @@ internal class User
         }
     }
 
-    internal static void EditUser()
+    internal static void EditUser(Window _adminList, int index)
     {
-        throw new NotImplementedException();
+        string item = _adminList.TextRows[index];
+        using (var db = new AdvNookContext())
+        {
+            var user = db.Users.FirstOrDefault(u => u.Username == item);
+            if (user != null)
+            {
+                Window editUserWindow = new Window("Edit User", 125, 0, new List<string>
+            {
+                "First Name:".PadRight(20) + user.FirstName,
+                "Last Name:".PadRight(20) + user.LastName,
+                "Age:".PadRight(20) + user.Age,
+                "Email:".PadRight(20) + user.Email,
+                "Address:".PadRight(20) + user.Adress,
+                "City:".PadRight(20) + user.City,
+                "Admin (Y/N):".PadRight(20) + (user.Admin ? "Y" : "N")
+            });
+                editUserWindow.Draw();
+
+                foreach (var row in editUserWindow.TextRows)
+                {
+                    int editIndex = editUserWindow.TextRows.IndexOf(row);
+                    Console.SetCursorPosition(127 + row.Length, editIndex + 1);
+
+                    switch (editIndex)
+                    {
+                        case 0: // First Name
+                            string firstName = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(firstName)) user.FirstName = firstName;
+                            break;
+
+                        case 1: // Last Name
+                            string lastName = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(lastName)) user.LastName = lastName;
+                            break;
+
+                        case 2: // Age
+                            int newAge = Methods.Checkint();
+                            if (newAge > 0) user.Age = newAge;
+                            break;
+
+                        case 3: // Email
+                            string email = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(email)) user.Email = email;
+                            break;
+
+                        case 4: // Address
+                            string address = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(address)) user.Adress = address;
+                            break;
+
+                        case 5: // City
+                            string city = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(city)) user.City = city;
+                            break;
+
+                        case 6: // Admin
+                            ConsoleKey adminKey = Console.ReadKey().Key;
+                            user.Admin = adminKey == ConsoleKey.Y;
+                            break;
+                    }
+                }
+
+                db.Users.Update(user);
+                db.SaveChanges();
+
+                Window successWindow = new Window("User Updated", new List<string> {
+                $"The user {user.Username} has been updated.",
+                "Press any key to continue..."
+            });
+                successWindow.Draw();
+                while (Console.KeyAvailable == false) { }
+            }
+        }
     }
 
-    internal static void RemoveUser()
+    internal static void RemoveUser(Window _adminList, int index)
     {
-        throw new NotImplementedException();
+        string item = _adminList.TextRows[index];
+        using (var db = new AdvNookContext())
+        {
+            var user = db.Users.FirstOrDefault(u => u.Username == item);
+            if (user != null)
+            {
+                db.Users.Remove(user);
+                db.SaveChanges();
+
+                Window successWindow = new Window("User Deleted", new List<string> {
+                $"The user {user.Username} has been deleted.",
+                "Press any key to continue..."
+            });
+                successWindow.Draw();
+                while (Console.KeyAvailable == false) { }
+            }
+        }
     }
 }

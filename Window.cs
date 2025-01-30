@@ -81,7 +81,6 @@ public class Window
             Console.Write(TextRows[j] + new String(' ', width - TextRows[j].Length));
             Console.ResetColor();
             Console.WriteLine(" " + '│');
-            //Console.WriteLine('│' + " " + TextRows[j] + new String(' ', width - TextRows[j].Length + 1) + '│');
         }
 
         // Rita undre delen av fönstret

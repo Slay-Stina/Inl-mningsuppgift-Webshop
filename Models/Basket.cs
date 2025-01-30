@@ -6,8 +6,8 @@ internal class Basket
     public int Id { get; set; }
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 
-    private static Window _window = new Window("Varukorg", 125, 6);
-    private static List<string> _emptyBasket = new List<string> { "Varukorgen är tom" };
+    private static Window _window = new Window("Basket", 110, 0);
+    private static List<string> _emptyBasket = new List<string> { "The basket is empty" };
     public static Basket GuestBasket { get; set; } = new Basket();
 
     internal static void Page()
@@ -52,9 +52,9 @@ internal class Basket
         };
         List<string> banner = new List<string>
         {
-            "╦  ╦╔═╗╦═╗╦ ╦╦╔═╔═╗╦═╗╔═╗",
-            "╚╗╔╝╠═╣╠╦╝║ ║╠╩╗║ ║╠╦╝║ ╦",
-            " ╚╝ ╩ ╩╩╚═╚═╝╩ ╩╚═╝╩╚═╚═╝"
+            "╔╗ ╔═╗╔═╗╦╔═╔═╗╔╦╗",
+            "╠╩╗╠═╣╚═╗╠╩╗║╣  ║ ",
+            "╚═╝╩ ╩╚═╝╩ ╩╚═╝ ╩ "
         };
         int bannerLength = banner[0].Length;
         int leftPos = (Console.WindowWidth - bannerLength) / 2;

@@ -76,11 +76,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    Product.EditProduct();
+                    Product.EditProduct(_adminList, (int)_adminList.SelectedIndex);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    Product.RemoveProduct();
+                    Product.RemoveProduct(_adminList, (int)_adminList.SelectedIndex);
                 }
                 break;
 
@@ -91,11 +91,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    User.EditUser();
+                    User.EditUser(_adminList, (int)_adminList.SelectedIndex);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    User.RemoveUser();
+                    User.RemoveUser(_adminList, (int)_adminList.SelectedIndex);
                 }
                 break;
 
@@ -106,11 +106,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    Supplier.EditSupplier();
+                    Supplier.EditSupplier(_adminList, (int)_adminList.SelectedIndex);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    Supplier.RemoveSupplier();
+                    Supplier.RemoveSupplier(_adminList, (int)_adminList.SelectedIndex);
                 }
                 break;
         }

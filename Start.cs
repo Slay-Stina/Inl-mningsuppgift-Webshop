@@ -10,27 +10,39 @@ internal class Start
     {
         "'H'ome",
         "'C'ategories.",
-        "'P'roducts."
+        "'P'roducts.",
+        "'S'earch product"
     };
     private static Window _menu = new Window("Main Menu", 25, 0, _list);
-    public static List<Product> ProductList = new List<Product>();
+    public static List<Product> ProductList = new List<Product>(); // Central lagring av produkter
     public static Window PageWindow = new Window(2, 10);
-    public static void Page()
+
+    public static async void Page(Task checkLogin)
     {
         Banner();
         _menu.Draw();
+
+        if (!checkLogin.IsCompleted)
+        {
+            await checkLogin;
+        }
+
+        Basket.DrawBasket();
 
         switch (Program.ActiveSubPage)
         {
             case SubPage.Default:
                 PageWindow.Header = "";
-                for (int i = 0; i < 3; i++)
-                {
-                    Featured(i);
-                }
+                FeaturedProducts();
                 break;
             case SubPage.Categories:
                 ListCategories();
+                break;
+            case SubPage.CategoryProducts:
+                ListCategoryProducts();
+                break;
+            case SubPage.Search:
+                SearchProducts();
                 break;
             case SubPage.Products:
                 ListProducts();
@@ -38,11 +50,9 @@ internal class Start
             case SubPage.ProductDetails:
                 ProductDetails();
                 break;
-            case SubPage.Users:
-                //Users();
-                break;
         }
     }
+
     public static void SelectItem(ConsoleKey key)
     {
         if (key == ConsoleKey.RightArrow)
@@ -50,19 +60,26 @@ internal class Start
             switch (Program.ActiveSubPage)
             {
                 case SubPage.Categories:
-                    //ListCatProd();
+                    Program.ActiveSubPage = SubPage.CategoryProducts;
                     break;
                 case SubPage.Products:
                     Program.ActiveSubPage = SubPage.ProductDetails;
                     break;
             }
         }
+
         if (key == ConsoleKey.LeftArrow)
         {
             switch (Program.ActiveSubPage)
             {
                 case SubPage.ProductDetails:
                     Program.ActiveSubPage = SubPage.Products;
+                    break;
+                case SubPage.CategoryProducts:
+                    Program.ActiveSubPage = SubPage.Categories;
+                    break;
+                case SubPage.Products:
+                    ProductList.Clear();
                     break;
             }
         }
@@ -72,40 +89,55 @@ internal class Start
     {
         PageWindow.Header = "Products - ↑↓ Navigate - → Select";
 
-        List<string> productList = new List<string>();
-        using (var db = new AdvNookContext())
+        if (!ProductList.Any())
         {
-            ProductList = db.Products.ToList();
-            productList = ProductList.Select(p => $"{p.Name} - {p.Price}").ToList();
+            using (var db = new AdvNookContext())
+            {
+                ProductList = db.Products.ToList();
+            }
         }
-        PageWindow.TextRows = productList;
+
+        PageWindow.TextRows = ProductList.Select(p => $"{p.Name} - {p.Price.ToString("C")}").ToList();
         PageWindow.Navigate();
     }
+
+
     internal static void ProductDetails()
     {
         using (var db = new AdvNookContext())
         {
             string selectedRow = PageWindow.TextRows[(int)PageWindow.SelectedIndex];
-            Product product = db.Products.Include(p => p.Categories).FirstOrDefault(p => selectedRow.Contains(p.Name));
+            Product product = db.Products
+                                .Include(p => p.Categories)
+                                .FirstOrDefault(p => selectedRow.Contains(p.Name));
 
-            List<string> details = new List<string>
-        {
-            product.Description,
-            product.Price.ToString("C"),
-            $"{string.Join(", ", product.Categories.Select(c => c.Name))}",
-            "",
-            "'Enter' to add to cart"
-        };
-            Window productDetailWindow = new Window($"{product.Name}", 50, 10, details);
-            productDetailWindow.Draw();
-            Start.PageWindow.Draw();
-
-            if (Program.KeyInfo.Key == ConsoleKey.Enter)
+            if (product != null)
             {
-                AddToBasket(product, db);
+                List<string> details = new List<string>
+            {
+                product.Description,
+                product.Price.ToString("C"),
+                $"{string.Join(", ", product.Categories.Select(c => c.Name))}",
+                "",
+                "'Enter' to add to cart"
+            };
+                Window productDetailWindow = new Window($"{product.Name}", 50, 10, details);
+                productDetailWindow.Draw();
+                Start.PageWindow.Draw();
+
+                if (Program.KeyInfo.Key == ConsoleKey.Enter)
+                {
+                    AddToBasket(product, db);
+                }
+            }
+            else
+            {
+                Window errorWindow = new Window("Error", "Product not found.");
+                errorWindow.Draw();
             }
         }
     }
+
     internal static void AddToBasket(Product? product, AdvNookContext db)
     {
         if (product.Amount <= 0)
@@ -136,34 +168,105 @@ internal class Start
 
     private static void ListCategories()
     {
-        PageWindow.Header = "Categories";
+        PageWindow.Header = "Categories - ↑↓ Navigate - → Select";
 
-        throw new NotImplementedException();
-    }
-
-    private static void Featured(int i)
-    {
-        char[] xyz = ['X', 'Y', 'Z'];
-        List<string> features = new List<string>
+        using (var db = new AdvNookContext())
         {
-            "a      ",
-            "b      ",
-            "c      "
-        };
-        Window featured = new Window($"{xyz[i]}", 2 + (20 * i), 10, features);
-        featured.Draw();
+            var categories = db.Categories.ToList();
+            PageWindow.TextRows = categories.Select(c => c.Name).ToList();
+        }
+
+        PageWindow.Navigate();
     }
+
+    internal static void ListCategoryProducts()
+    {
+        using (var db = new AdvNookContext())
+        {
+            int categoryId = (int)PageWindow.SelectedIndex;
+            var category = db.Categories.Include(c => c.Products).FirstOrDefault(c => c.Id == categoryId);
+
+            if (category != null)
+            {
+                ProductList = category.Products.ToList();
+                PageWindow.TextRows = ProductList.Select(p => $"{p.Name} - {p.Price.ToString("C")}").ToList();
+
+                Program.ActiveSubPage = SubPage.Products;
+                PageWindow.SelectedIndex = 0;
+            }
+            else
+            {
+                Window errorWindow = new Window("ERROR", "Category is empty.");
+                errorWindow.Draw();
+            }
+        }
+    }
+
+    internal static void SearchProducts()
+    {
+        Window searchWindow = new Window("Search Products", "");
+        searchWindow.Draw();
+
+        Console.SetCursorPosition(51, 21);
+        string searchTerm = Console.ReadLine();
+
+        using (var db = new AdvNookContext())
+        {
+            var searchResults = db.Products
+                                  .Where(p => EF.Functions.Like(p.Name, $"%{searchTerm}%") ||
+                                              EF.Functions.Like(p.Description, $"%{searchTerm}%"))
+                                  .ToList();
+
+            // Rensa ProductList och fyll den med sökresultaten
+            ProductList.Clear();
+            if (searchResults.Any())
+            {
+                ProductList.AddRange(searchResults);
+            }
+            else
+            {
+                searchWindow.TextRows = new List<string> { "No results found." };
+                searchWindow.Draw();
+            }
+        }
+
+        Program.ActiveSubPage = SubPage.Products;
+    }
+
+    private static void FeaturedProducts()
+    {
+        List<Product> featuredProducts = new List<Product>();
+        using (var db = new AdvNookContext())
+        {
+            featuredProducts = db.Products
+                                  .Where(p => p.Featured)
+                                  .Take(3)
+                                  .ToList();
+        }
+
+        while (featuredProducts.Count < 3)
+        {
+            featuredProducts.Add(new Product { Name = "No featured product", Price = 0, Featured = false });
+        }
+
+        char[] xyz = { 'X', 'Y', 'Z' };
+        for (int i = 0; i < 3; i++)
+        {
+            var product = featuredProducts[i];
+            List<string> featureDetails = new List<string>
+        {
+            product.Name.PadRight(30),
+            product.Price.ToString("C"),
+        };
+
+            Window featuredWindow = new Window($"{xyz[i]}", 2 + (35 * i), 10, featureDetails);
+            featuredWindow.Draw();
+        }
+    }
+
 
     private static void Banner()
     {
-        List<string> bannerAlt = new List<string>{
-            " █████╗ ██████╗ ██╗   ██╗███████╗███╗   ██╗████████╗██╗   ██╗██████╗ ███████╗    ███╗   ██╗ ██████╗  ██████╗ ██╗  ██╗",
-            "██╔══██╗██╔══██╗██║   ██║██╔════╝████╗  ██║╚══██╔══╝██║   ██║██╔══██╗██╔════╝    ████╗  ██║██╔═══██╗██╔═══██╗██║ ██╔╝",
-            "███████║██║  ██║██║   ██║█████╗  ██╔██╗ ██║   ██║   ██║   ██║██████╔╝█████╗      ██╔██╗ ██║██║   ██║██║   ██║█████╔╝ ",
-            "██╔══██║██║  ██║╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ██║   ██║██╔══██╗██╔══╝      ██║╚██╗██║██║   ██║██║   ██║██╔═██╗ ",
-            "██║  ██║██████╔╝ ╚████╔╝ ███████╗██║ ╚████║   ██║   ╚██████╔╝██║  ██║███████╗    ██║ ╚████║╚██████╔╝╚██████╔╝██║  ██╗",
-            "╚═╝  ╚═╝╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝"
-        };
         List<string> banner = new List<string>
         {
             "╔═╗╔╦╗╦  ╦╔═╗╔╗╔╔╦╗╦ ╦╦═╗╔═╗  ╔╗╔╔═╗╔═╗╦╔═",

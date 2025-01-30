@@ -16,13 +16,13 @@ internal class Program
         ConsoleKey.P,
         ConsoleKey.C,
         ConsoleKey.U,
-        ConsoleKey.S,
+        ConsoleKey.S
     };
     static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
     {
         ConsoleKey.N,
-        ConsoleKey.R,
-        ConsoleKey.T
+        ConsoleKey.E,
+        ConsoleKey.D
     };
 
     public static MainPage ActiveMainPage = MainPage.Start;
@@ -40,7 +40,7 @@ internal class Program
             switch (ActiveMainPage)
             {
                 case MainPage.Start:
-                    Start.Page();
+                    Start.Page(checkLogin);
                     break;
                 case MainPage.Admin:
                     if (Login.ActiveUser is not null && Login.ActiveUser.Admin)
@@ -62,7 +62,6 @@ internal class Program
             }
 
             Login.DrawLogin();
-            Basket.DrawBasket();
 
             KeyInfo = Console.ReadKey(true);
             if (MainPageKeys.Contains(KeyInfo.Key))
@@ -93,7 +92,7 @@ internal class Program
             case ConsoleKey.S:
                 if (ActiveMainPage == MainPage.Admin)
                 { return SubPage.Suppliers; }
-                else { return SubPage.Default; }
+                else { return SubPage.Search; }
             default:
                 return SubPage.Default;
         }

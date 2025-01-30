@@ -8,31 +8,114 @@ internal class Supplier
 
     internal static void AddNewSupplier()
     {
-        Window newSup = new Window("Ny leverantör", 75, 10, new List<string> {
-            "Namn:".PadRight(20),
-            "Land:".PadRight(20)
-        });
-        newSup.Draw();
-        Console.SetCursorPosition(83, 11);
-        string name = Console.ReadLine();
-
-        Console.SetCursorPosition(83, 12);
-        string country = Console.ReadLine();
-
         using (var db = new AdvNookContext())
         {
-            db.Suppliers.Add(new Supplier { Name = name, Country = country });
+            Window newSupplierForm = new Window("New Supplier", 75, 10, new List<string> {
+            "Name:",
+            "Country:"
+        });
+            newSupplierForm.Draw();
+
+            Supplier newSupplier = new Supplier();
+
+            foreach (string row in newSupplierForm.TextRows)
+            {
+                int index = newSupplierForm.TextRows.IndexOf(row);
+                Console.SetCursorPosition(83, index + 11);
+                switch (index)
+                {
+                    case 0:
+                        newSupplier.Name = Console.ReadLine();
+                        break;
+                    case 1:
+                        newSupplier.Country = Console.ReadLine();
+                        break;
+                }
+            }
+
+            db.Suppliers.Add(newSupplier);
             db.SaveChanges();
+
+            Window successWindow = new Window("Supplier Added", new List<string> {
+            $"The supplier {newSupplier.Name} has been added.",
+            "Press any key to continue..."
+        });
+            successWindow.Draw();
+            while (Console.KeyAvailable == false)
+            { }
         }
     }
 
-    internal static void EditSupplier()
+    internal static void EditSupplier(Window _adminList, int index)
     {
-        throw new NotImplementedException();
+        string item = _adminList.TextRows[index];
+        using (var db = new AdvNookContext())
+        {
+            var supplier = db.Suppliers.FirstOrDefault(s => s.Name == item);
+            if (supplier != null)
+            {
+                Window editSupplierForm = new Window("Edit Supplier", 75, 10, new List<string> {
+                "Name:".PadRight(20) + supplier.Name,
+                "Country:".PadRight(20) + supplier.Country
+            });
+                editSupplierForm.Draw();
+
+                foreach (string row in editSupplierForm.TextRows)
+                {
+                    int editIndex = editSupplierForm.TextRows.IndexOf(row);
+                    Console.SetCursorPosition(83, editIndex + 11);
+
+                    switch (editIndex)
+                    {
+                        case 0:
+                            string name = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(name))
+                                supplier.Name = name;
+                            break;
+
+                        case 1:
+                            string country = Console.ReadLine();
+                            if (!string.IsNullOrEmpty(country))
+                                supplier.Country = country;
+                            break;
+                    }
+                }
+
+                db.Suppliers.Update(supplier);
+                db.SaveChanges();
+
+                Window successWindow = new Window("Supplier Updated", new List<string> {
+                $"The supplier {supplier.Name} has been updated.",
+                "Press any key to continue..."
+            });
+                successWindow.Draw();
+                while (Console.KeyAvailable == false)
+                { }
+            }
+        }
     }
 
-    internal static void RemoveSupplier()
+
+    internal static void RemoveSupplier(Window _adminList, int index)
     {
-        throw new NotImplementedException();
+        string item = _adminList.TextRows[index];
+        using (var db = new AdvNookContext())
+        {
+            var supplier = db.Suppliers.FirstOrDefault(s => s.Name == item);
+            if (supplier != null)
+            {
+                db.Suppliers.Remove(supplier);
+                db.SaveChanges();
+
+                Window successWindow = new Window("Supplier Removed", new List<string> {
+                $"The supplier {supplier.Name} has been removed.",
+                "Press any key to continue..."
+            });
+                successWindow.Draw();
+                while (Console.KeyAvailable == false)
+                { }
+            }
+        }
     }
+
 }
