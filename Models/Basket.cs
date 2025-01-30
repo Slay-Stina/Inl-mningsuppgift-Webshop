@@ -1,5 +1,4 @@
-﻿
-using Inlämningsuppgift_Webshop;
+﻿using Inlämningsuppgift_Webshop;
 
 namespace Assignment_Webshop.Models;
 
@@ -7,67 +6,94 @@ internal class Basket
 {
     public int Id { get; set; }
     public virtual ICollection<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
-
-    private static Window _window = new Window("'B'asket", 110, 0);
+    private static string _header => "'B'asket" + (Program.ActiveSubPage == SubPage.Basket ? " - ↑↓ Navigate - ←→ Change quantity" : "");
+    private static Window _window = new Window(_header, 95, 0);
     private static List<string> _emptyBasket = new List<string> { "The basket is empty" };
     public static Basket GuestBasket { get; set; } = new Basket();
 
-    internal static void Page()
-    {
-        Banner();
-    }
+    private static Basket _currentBasket = Login.ActiveUser != null ? Login.ActiveUser.Basket : GuestBasket;
+
     public static void DrawBasket()
     {
-        Basket basket;
+        _currentBasket = Login.ActiveUser != null ? Login.ActiveUser.Basket : GuestBasket;
+        UpdateWindow();
 
-        if (Login.ActiveUser != null)
+        if (Program.ActiveSubPage == SubPage.Basket)
         {
-            basket = Login.ActiveUser.Basket;
+            ChangeQuantity();
+            _window.Navigate();
         }
         else
         {
-            basket = GuestBasket;
+            _window.SelectedIndex = null;
+            _window.Draw();
         }
+    }
 
-        if (basket.BasketProducts != null && basket.BasketProducts.Count > 0)
+    public static void ChangeQuantity()
+    {
+        if (_currentBasket.BasketProducts != null && _currentBasket.BasketProducts.Count > 0 && _window.SelectedIndex is not null)
         {
-            var basketProducts = basket.BasketProducts
-                                        .GroupBy(bp => bp.Product.Name)
-                                        .Select(g =>
-                                            $"{g.Key} {g.Sum(bp => bp.Quantity)}st - {g.Sum(bp => bp.Quantity * bp.Product.Price):C}"
-                                        )
-                                        .ToList();
+            var selectedProduct = _currentBasket.BasketProducts.ElementAtOrDefault(_window.SelectedIndex.Value);
 
+            if (Program.KeyInfo.Key == ConsoleKey.RightArrow && selectedProduct != null)
+            {
+                selectedProduct.Quantity++;
+                UpdateProductInDatabase(selectedProduct);
+            }
+            else if (Program.KeyInfo.Key == ConsoleKey.LeftArrow && selectedProduct != null)
+            {
+                if (selectedProduct.Quantity > 1)
+                {
+                    selectedProduct.Quantity--;
+                    UpdateProductInDatabase(selectedProduct);
+                }
+                else
+                {
+                    _currentBasket.BasketProducts.Remove(selectedProduct);
+                    RemoveProductFromDatabase(selectedProduct);
+                }
+            }
+
+            UpdateWindow();
+        }
+    }
+
+    private static void UpdateWindow()
+    {
+        _window.Header = _header;
+
+        if (_currentBasket.BasketProducts != null && _currentBasket.BasketProducts.Count > 0)
+        {
+            var basketProducts = _currentBasket.BasketProducts
+                .GroupBy(bp => bp.Product.Name)
+                .Select(g =>
+                    $"{g.Sum(bp => bp.Quantity)}st {g.Key.PadRight(30)} - {g.Sum(bp => bp.Quantity * bp.Product.Price):C}"
+                )
+                .ToList();
             _window.TextRows = basketProducts;
         }
         else
         {
             _window.TextRows = _emptyBasket;
         }
-
-        _window.Draw();
     }
 
-    private static void Banner()
+    private static void UpdateProductInDatabase(BasketProduct product)
     {
-        //List<string> bannerAlt = new List<string>
-        //{
-        //    "██╗   ██╗ █████╗ ██████╗ ██╗   ██╗██╗  ██╗ ██████╗ ██████╗  ██████╗ ",
-        //    "██║   ██║██╔══██╗██╔══██╗██║   ██║██║ ██╔╝██╔═══██╗██╔══██╗██╔════╝ ",
-        //    "██║   ██║███████║██████╔╝██║   ██║█████╔╝ ██║   ██║██████╔╝██║  ███╗",
-        //    "╚██╗ ██╔╝██╔══██║██╔══██╗██║   ██║██╔═██╗ ██║   ██║██╔══██╗██║   ██║",
-        //    " ╚████╔╝ ██║  ██║██║  ██║╚██████╔╝██║  ██╗╚██████╔╝██║  ██║╚██████╔╝",
-        //    "  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ",
-        //};
-        List<string> banner = new List<string>
+        using (var db = new AdvNookContext())
         {
-            "╔╗ ╔═╗╔═╗╦╔═╔═╗╔╦╗",
-            "╠╩╗╠═╣╚═╗╠╩╗║╣  ║ ",
-            "╚═╝╩ ╩╚═╝╩ ╩╚═╝ ╩ "
-        };
-        int bannerLength = banner[0].Length;
-        int leftPos = (Console.WindowWidth - bannerLength) / 2;
-        Window title = new Window("", leftPos, 0, banner);
-        title.Draw();
+            db.Update(product);
+            db.SaveChanges();
+        }
+    }
+
+    private static void RemoveProductFromDatabase(BasketProduct product)
+    {
+        using (var db = new AdvNookContext())
+        {
+            db.Remove(product);
+            db.SaveChanges();
+        }
     }
 }

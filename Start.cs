@@ -141,24 +141,20 @@ internal class Start
             return;
         }
 
-        // Hitta den aktuella användarens varukorg
         var userBasket = Login.ActiveUser != null
             ? db.Baskets.Include(b => b.BasketProducts).ThenInclude(bp => bp.Product).FirstOrDefault(b => b.Id == Login.ActiveUser.Basket.Id)
-            : Basket.GuestBasket;  // För gäst användare
+            : Basket.GuestBasket;
 
         if (userBasket != null)
         {
-            // Hitta den aktuella produktens basket product
             var existingProduct = userBasket.BasketProducts.FirstOrDefault(bp => bp.ProductId == product.Id);
 
             if (existingProduct != null)
             {
-                // Om produkten redan finns i varukorgen, uppdatera kvantiteten
                 existingProduct.Quantity++;
             }
             else
             {
-                // Om produkten inte finns i varukorgen, skapa en ny post med kvantitet 1
                 userBasket.BasketProducts.Add(new BasketProduct
                 {
                     ProductId = product.Id,
@@ -276,7 +272,6 @@ internal class Start
                 int selectedProductIndex = Array.IndexOf(xyz, Program.KeyInfo.KeyChar);
                 if (selectedProductIndex >= 0 && selectedProductIndex < featuredProducts.Count)
                 {
-                    // Lägg till produkten i varukorgen
                     AddToBasket(featuredProducts[selectedProductIndex]);
                 }
                 break;
@@ -292,8 +287,7 @@ internal class Start
             "╩ ╩═╩╝ ╚╝ ╚═╝╝╚╝ ╩ ╚═╝╩╚═╚═╝  ╝╚╝╚═╝╚═╝╩ ╩"
         };
         int bannerLength = banner[0].Length;
-        int leftPos = (Console.WindowWidth - bannerLength) / 2;
-        Window title = new Window("", leftPos, 0, banner);
+        Window title = new Window("Welcome to", 45, 0, banner);
         title.Draw();
     }
 }

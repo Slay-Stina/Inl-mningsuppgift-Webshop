@@ -9,13 +9,13 @@ internal class Program
     {
         ConsoleKey.H,
         ConsoleKey.A,
-        ConsoleKey.B
     };
     static List<ConsoleKey> SubPageKeys { get; } = new List<ConsoleKey>
     {
         ConsoleKey.P,
         ConsoleKey.C,
         ConsoleKey.U,
+        ConsoleKey.B,
         ConsoleKey.S
     };
     static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
@@ -51,9 +51,6 @@ internal class Program
                     {
                         ActiveMainPage = MainPage.Start;
                     }
-                    break;
-                case MainPage.Basket:
-                    Basket.Page();
                     break;
             }
             if (!checkLogin.IsCompleted)
@@ -93,6 +90,10 @@ internal class Program
                 if (ActiveMainPage == MainPage.Admin)
                 { return SubPage.Suppliers; }
                 else { return SubPage.Search; }
+
+            case ConsoleKey.B:
+                return SubPage.Basket;
+
             default:
                 return SubPage.Default;
         }
@@ -116,8 +117,6 @@ internal class Program
                 {
                     return MainPage.Start;
                 }
-            case ConsoleKey.B:
-                return MainPage.Basket;
 
             default:
                 return MainPage.Start;
