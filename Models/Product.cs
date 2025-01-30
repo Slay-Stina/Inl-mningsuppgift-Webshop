@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Inlämningsuppgift_Webshop;
+using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_Webshop.Models;
 
@@ -10,9 +11,9 @@ internal class Product
     public decimal Price { get; set; }
     public virtual ICollection<Category> Categories { get; set; }
     public int Amount { get; set; }
-    public virtual ICollection<Basket>? Baskets { get; set; }
     public virtual Supplier Supplier { get; set; }
     public bool Featured { get; set; }
+    public virtual ICollection<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
 
     internal static void AddNewProduct()
     {

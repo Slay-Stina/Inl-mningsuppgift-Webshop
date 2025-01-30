@@ -17,29 +17,45 @@ internal class Login
     public static void Prompt()
     {
         List<string> loginText = new List<string>
-        {
+    {
         "Username:".PadRight(19)
-        };
+    };
+
         _window.TextRows = loginText;
         _window.Draw();
+
         Console.SetCursorPosition(loginText[0].Length - 6, 1);
         string username = Console.ReadLine();
+
         using (var db = new AdvNookContext())
         {
             try
             {
-                ActiveUser = db.Users.Include(u => u.Basket.Products).FirstOrDefault(u => u.Username == username);
+                // Hämta användaren och inkludera deras varukorg och produkter via BasketProduct
+                ActiveUser = db.Users
+                               .Include(u => u.Basket)
+                               .ThenInclude(b => b.BasketProducts) // Inkludera BasketProducts
+                               .ThenInclude(bp => bp.Product) // Inkludera produkterna som är kopplade via BasketProduct
+                               .FirstOrDefault(u => u.Username == username);
+
                 if (ActiveUser != null)
+                {
                     ActiveUser.LoggedIn = true;
+                    Console.WriteLine($"Welcome back, {ActiveUser.Username}!");
+                }
+                else
+                {
+                    Console.WriteLine("User not found, try again or add a new user.");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("User not found, try again or add a new user.");
+                Console.WriteLine("An error occurred while trying to find the user.");
                 Console.WriteLine(ex.Message);
             }
-            db.SaveChanges();
         }
     }
+
 
     internal static void DrawLogin()
     {

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Inlämningsuppgift_Webshop;
+using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_Webshop.Models;
 
@@ -12,10 +13,24 @@ internal class AdvNookContext : DbContext
     public DbSet<Shipping> Shippings { get; set; }
     public DbSet<Supplier> Suppliers { get; set; }
     public DbSet<Basket> Baskets { get; set; }
+    public DbSet<BasketProduct> BasketProduct { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<BasketProduct>()
+            .HasKey(bp => bp.Id);  // Sätt primärnyckel på BasketProduct
+
+        modelBuilder.Entity<BasketProduct>()
+            .HasOne(bp => bp.Basket)
+            .WithMany(b => b.BasketProducts)
+            .HasForeignKey(bp => bp.BasketId);
+
+        modelBuilder.Entity<BasketProduct>()
+            .HasOne(bp => bp.Product)
+            .WithMany(p => p.BasketProducts)
+            .HasForeignKey(bp => bp.ProductId);
 
         // Optional: Configure the enum property if needed
         modelBuilder.Entity<Order>()

@@ -1,6 +1,6 @@
 ﻿using Assignment_Webshop.Models;
+using Inlämningsuppgift_Webshop;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace Assignment_Webshop;
 
@@ -14,7 +14,7 @@ internal class Start
         "'S'earch product"
     };
     private static Window _menu = new Window("Main Menu", 25, 0, _list);
-    public static List<Product> ProductList = new List<Product>(); // Central lagring av produkter
+    public static List<Product> ProductList = new List<Product>();
     public static Window PageWindow = new Window(2, 10);
 
     public static async void Page(Task checkLogin)
@@ -111,34 +111,28 @@ internal class Start
                                 .Include(p => p.Categories)
                                 .FirstOrDefault(p => selectedRow.Contains(p.Name));
 
-            if (product != null)
+            List<string> details = new List<string>
             {
-                List<string> details = new List<string>
-            {
-                product.Description,
-                product.Price.ToString("C"),
-                $"{string.Join(", ", product.Categories.Select(c => c.Name))}",
-                "",
-                "'Enter' to add to cart"
+                $"Price: {product.Price.ToString("C")}",
+                $"Categories: {string.Join(", ", product.Categories.Select(c => c.Name))}",
+                ""
             };
-                Window productDetailWindow = new Window($"{product.Name}", 50, 10, details);
-                productDetailWindow.Draw();
-                Start.PageWindow.Draw();
 
-                if (Program.KeyInfo.Key == ConsoleKey.Enter)
-                {
-                    AddToBasket(product, db);
-                }
-            }
-            else
+            details.AddRange(Methods.WrapText(product.Description, 40));
+
+            details.AddRange("", "'Enter' to add to cart");
+
+            Window productDetailWindow = new Window($"{product.Name}", 50, 10, details);
+            productDetailWindow.Draw();
+            PageWindow.Draw();
+
+            if (Program.KeyInfo.Key == ConsoleKey.Enter)
             {
-                Window errorWindow = new Window("Error", "Product not found.");
-                errorWindow.Draw();
+                AddToBasket(product, db);
             }
         }
     }
-
-    internal static void AddToBasket(Product? product, AdvNookContext db)
+    internal static void AddToBasket(Product product, AdvNookContext? db = null)
     {
         if (product.Amount <= 0)
         {
@@ -147,23 +141,34 @@ internal class Start
             return;
         }
 
-        var dbProduct = db.Products.FirstOrDefault(p => p.Id == product.Id);
+        // Hitta den aktuella användarens varukorg
+        var userBasket = Login.ActiveUser != null
+            ? db.Baskets.Include(b => b.BasketProducts).ThenInclude(bp => bp.Product).FirstOrDefault(b => b.Id == Login.ActiveUser.Basket.Id)
+            : Basket.GuestBasket;  // För gäst användare
 
-        if (Login.ActiveUser != null)
+        if (userBasket != null)
         {
-            var userBasket = db.Baskets.Include(b => b.Products).FirstOrDefault(b => b.Id == Login.ActiveUser.Basket.Id);
-            if (userBasket != null)
+            // Hitta den aktuella produktens basket product
+            var existingProduct = userBasket.BasketProducts.FirstOrDefault(bp => bp.ProductId == product.Id);
+
+            if (existingProduct != null)
             {
-                userBasket.Products.Add(dbProduct);
+                // Om produkten redan finns i varukorgen, uppdatera kvantiteten
+                existingProduct.Quantity++;
             }
-        }
-        else
-        {
-            Basket.GuestBasket.Products.Add(dbProduct);
-        }
+            else
+            {
+                // Om produkten inte finns i varukorgen, skapa en ny post med kvantitet 1
+                userBasket.BasketProducts.Add(new BasketProduct
+                {
+                    ProductId = product.Id,
+                    Product = product,
+                    Quantity = 1
+                });
+            }
 
-        dbProduct.Amount--;
-        db.SaveChanges();
+            db.SaveChanges();
+        }
     }
 
     private static void ListCategories()
@@ -217,7 +222,6 @@ internal class Start
                                               EF.Functions.Like(p.Description, $"%{searchTerm}%"))
                                   .ToList();
 
-            // Rensa ProductList och fyll den med sökresultaten
             ProductList.Clear();
             if (searchResults.Any())
             {
@@ -258,12 +262,26 @@ internal class Start
             product.Name.PadRight(30),
             product.Price.ToString("C"),
         };
+            featureDetails.AddRange(Methods.WrapText(product.Description, 30));
 
             Window featuredWindow = new Window($"{xyz[i]}", 2 + (35 * i), 10, featureDetails);
             featuredWindow.Draw();
         }
-    }
 
+        switch (Program.KeyInfo.Key)
+        {
+            case ConsoleKey.X:
+            case ConsoleKey.Y:
+            case ConsoleKey.Z:
+                int selectedProductIndex = Array.IndexOf(xyz, Program.KeyInfo.KeyChar);
+                if (selectedProductIndex >= 0 && selectedProductIndex < featuredProducts.Count)
+                {
+                    // Lägg till produkten i varukorgen
+                    AddToBasket(featuredProducts[selectedProductIndex]);
+                }
+                break;
+        }
+    }
 
     private static void Banner()
     {

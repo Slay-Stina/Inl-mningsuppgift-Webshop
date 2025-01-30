@@ -1,12 +1,14 @@
 ﻿
+using Inlämningsuppgift_Webshop;
+
 namespace Assignment_Webshop.Models;
 
 internal class Basket
 {
     public int Id { get; set; }
-    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+    public virtual ICollection<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
 
-    private static Window _window = new Window("Basket", 110, 0);
+    private static Window _window = new Window("'B'asket", 110, 0);
     private static List<string> _emptyBasket = new List<string> { "The basket is empty" };
     public static Basket GuestBasket { get; set; } = new Basket();
 
@@ -27,29 +29,36 @@ internal class Basket
             basket = GuestBasket;
         }
 
-        if (basket.Products != null && basket.Products.Count > 0)
+        if (basket.BasketProducts != null && basket.BasketProducts.Count > 0)
         {
-            var basketProducts = basket.Products.GroupBy(g => g.Name);
-            var productList = basketProducts.Select(g => $"{g.Key.PadRight(10)} {g.Count()}st" /*- {g.Select(s => s.Price).Sum()}Kr*/).ToList();
-            _window.TextRows = productList;
+            var basketProducts = basket.BasketProducts
+                                        .GroupBy(bp => bp.Product.Name)
+                                        .Select(g =>
+                                            $"{g.Key} {g.Sum(bp => bp.Quantity)}st - {g.Sum(bp => bp.Quantity * bp.Product.Price):C}"
+                                        )
+                                        .ToList();
+
+            _window.TextRows = basketProducts;
         }
         else
         {
             _window.TextRows = _emptyBasket;
         }
+
         _window.Draw();
     }
+
     private static void Banner()
     {
-        List<string> bannerAlt = new List<string>
-        {
-            "██╗   ██╗ █████╗ ██████╗ ██╗   ██╗██╗  ██╗ ██████╗ ██████╗  ██████╗ ",
-            "██║   ██║██╔══██╗██╔══██╗██║   ██║██║ ██╔╝██╔═══██╗██╔══██╗██╔════╝ ",
-            "██║   ██║███████║██████╔╝██║   ██║█████╔╝ ██║   ██║██████╔╝██║  ███╗",
-            "╚██╗ ██╔╝██╔══██║██╔══██╗██║   ██║██╔═██╗ ██║   ██║██╔══██╗██║   ██║",
-            " ╚████╔╝ ██║  ██║██║  ██║╚██████╔╝██║  ██╗╚██████╔╝██║  ██║╚██████╔╝",
-            "  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ",
-        };
+        //List<string> bannerAlt = new List<string>
+        //{
+        //    "██╗   ██╗ █████╗ ██████╗ ██╗   ██╗██╗  ██╗ ██████╗ ██████╗  ██████╗ ",
+        //    "██║   ██║██╔══██╗██╔══██╗██║   ██║██║ ██╔╝██╔═══██╗██╔══██╗██╔════╝ ",
+        //    "██║   ██║███████║██████╔╝██║   ██║█████╔╝ ██║   ██║██████╔╝██║  ███╗",
+        //    "╚██╗ ██╔╝██╔══██║██╔══██╗██║   ██║██╔═██╗ ██║   ██║██╔══██╗██║   ██║",
+        //    " ╚████╔╝ ██║  ██║██║  ██║╚██████╔╝██║  ██╗╚██████╔╝██║  ██║╚██████╔╝",
+        //    "  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ",
+        //};
         List<string> banner = new List<string>
         {
             "╔╗ ╔═╗╔═╗╦╔═╔═╗╔╦╗",
