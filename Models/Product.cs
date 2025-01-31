@@ -119,6 +119,16 @@ internal class Product
         string itemName = item.Split(' ')[0];
         using (var db = new AdvNookContext())
         {
+            List<Category> categories = db.Categories.ToList();
+
+            Window categoryWindow = new Window("", 20, 30, categories.Select(c => $"{c.Id}".PadRight(3) + $" {c.Name}").ToList());
+
+            List<string> catHeader = new List<string>
+            {
+                "ID".PadRight(3) + " Name"
+            };
+            categoryWindow.TextRows.InsertRange(0, catHeader);
+
             var product = db.Products.Include(p => p.Categories).FirstOrDefault(p => p.Name == itemName);
             if (product != null)
             {
@@ -136,7 +146,7 @@ internal class Product
                 foreach (var row in editProductWindow.TextRows)
                 {
                     int editIndex = editProductWindow.TextRows.IndexOf(row);
-                    Console.SetCursorPosition(30 + row.Length, editProductWindow.Top + 1);
+                    Console.SetCursorPosition(10 + row.Length, 21 + editIndex);
 
                     switch (editIndex)
                     {
@@ -163,15 +173,15 @@ internal class Product
                             break;
 
                         case 5:
+                            categoryWindow.Draw();
+                            Console.SetCursorPosition(23 + row.Length, index + 21);
                             string categoryInput = Console.ReadLine();
-                            if (!string.IsNullOrEmpty(categoryInput))
-                            {
-                                List<int> categoryIds = categoryInput.Split(',')
-                                    .Where(id => int.TryParse(id.Trim(), out _))
-                                    .Select(id => int.Parse(id.Trim()))
-                                    .ToList();
-                                product.Categories = db.Categories.Where(c => categoryIds.Contains(c.Id)).ToList();
-                            }
+                            List<int> selectedCategoryIds = categoryInput.Split(',')
+                                .Where(id => int.TryParse(id.Trim(), out _))
+                                .Select(id => int.Parse(id.Trim()))
+                                .ToList();
+                            List<Category> selectedCategories = db.Categories.Where(c => selectedCategoryIds.Contains(c.Id)).ToList();
+                            product.Categories = selectedCategories;
                             break;
                     }
                 }
@@ -189,18 +199,24 @@ internal class Product
 
     internal static void RemoveProduct(Window list, int index)
     {
-        string item = list.TextRows[index];
+        string item = list.TextRows[index].Split(' ')[0];
+
         using (var db = new AdvNookContext())
         {
             var product = db.Products.FirstOrDefault(p => p.Name == item);
+
             if (product != null)
             {
                 db.Products.Remove(product);
                 db.SaveChanges();
 
                 Window successWindow = new Window("Product Deleted", new List<string>
-                { $"The product {product.Name} has been deleted.", "Press any key to continue..." });
+            {
+                $"The product {product.Name} has been deleted.",
+                "Press any key to continue..."
+            });
                 successWindow.Draw();
+
                 while (Console.KeyAvailable == false) { }
             }
         }

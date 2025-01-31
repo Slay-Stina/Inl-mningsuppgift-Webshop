@@ -15,7 +15,7 @@ internal class Admin
         "'O': Manage orders."
     };
     private static Window _menu = new Window("Admin menu", 25, 0, _list);
-    private static Window _adminList { get; set; } = new Window(2, 7);
+    private static Window _adminList { get; set; } = new Window(2, 8);
     private static string _headerDefault = "- 'N'ew - 'E'dit - 'D'elete";
     private static readonly Dictionary<SubPage, string> _subPageHeaders = new Dictionary<SubPage, string>
     {
@@ -55,8 +55,45 @@ internal class Admin
 
     private static void AdminOrders()
     {
-        throw new NotImplementedException();
+        List<string> orderList = new List<string>();
+
+        using (var db = new AdvNookContext())
+        {
+            var orders = from o in db.Orders
+                         join u in db.Users on o.UserId equals u.Id
+                         join s in db.Shippings on o.ShippingId equals s.Id
+                         select new
+                         {
+                             OrderId = o.Id,
+                             OrderDate = o.OrderDate,
+                             Username = u.Username,
+                             OrderStatus = o.Status,
+                             ShippingType = s.Type,
+                         };
+
+            // Om du vill konvertera resultatet till en lista av strängar för att visa i UI
+            orderList = orders.Select(o =>
+                $"{o.OrderId.ToString().PadRight(10)}" +
+                $"{o.OrderDate.ToString("yyyy-MM-dd").PadRight(15)}" +
+                $"{o.Username.PadRight(20)}" +
+                $"{o.OrderStatus.ToString().PadRight(15)}" +
+                $"{o.ShippingType.PadRight(15)}"
+            ).ToList();
+        }
+
+
+        List<string> tableHeader = new List<string>
+    {
+        $"{"Order ID".PadRight(10)}{"Order Date".PadRight(15)}{"User".PadRight(20)}{"Status".PadRight(15)}{"Shipping".PadRight(15)}"
+    };
+
+        orderList.Insert(0, tableHeader[0]);
+
+        _adminList.TextRows = orderList.Count == 0 ? new List<string> { "No orders found." } : orderList;
+
+        _adminList.Navigate();
     }
+
 
     public static void SelectAdminItem(ConsoleKey key)
     {

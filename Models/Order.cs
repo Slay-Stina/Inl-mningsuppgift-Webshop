@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Assignment_Webshop.Models;
 
-public class Order
+internal class Order
 {
     public int Id { get; set; }
     public OrderStatus Status { get; set; }

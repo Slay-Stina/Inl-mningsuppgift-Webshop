@@ -279,7 +279,6 @@ internal class Start
             shippingWindow.TextRows.InsertRange(0, shipHeader);
             shippingWindow.Draw();
 
-            // Placera markören för användarens input
             Console.SetCursorPosition(26, 11);
 
             int selectedShippingId;
@@ -307,42 +306,42 @@ internal class Start
             // Steg 3: Lägg till orderdetaljer
             foreach (var basketProduct in basket.BasketProducts)
             {
-                OrderDetail orderDetail = new OrderDetail
+                var productToUpdate = db.Products.FirstOrDefault(p => p.Id == basketProduct.Product.Id);
+                if (productToUpdate != null)
                 {
-                    OrderId = newOrder.Id,
-                    ProductId = basketProduct.Product.Id,
-                    Quantity = basketProduct.Quantity,
-                    UnitPrice = basketProduct.Product.Price
-                };
+                    OrderDetail orderDetail = new OrderDetail
+                    {
+                        OrderId = newOrder.Id,
+                        ProductId = productToUpdate.Id,
+                        Quantity = basketProduct.Quantity,
+                        UnitPrice = productToUpdate.Price
+                    };
 
-                db.OrderDetails.Add(orderDetail);
+                    db.OrderDetails.Add(orderDetail);
 
-                // Uppdatera lager
-                basketProduct.Product.Amount -= basketProduct.Quantity;
-                db.Update(basketProduct.Product);
+                    productToUpdate.Amount -= basketProduct.Quantity;
+                    db.Update(productToUpdate);
+                }
             }
 
-            // Beräkna totalkostnad innan varukorgen rensas
             decimal totalCost = selectedShipping.Price +
                                 basket.BasketProducts.Sum(bp => bp.Quantity * bp.Product.Price);
 
-            // Töm varukorgen
             basket.BasketProducts.Clear();
 
-            // Spara alla ändringar
             db.SaveChanges();
 
             // Steg 4: Visa orderbekräftelse
             List<string> confirmationText = new List<string>
-            {
-                "Order Confirmation:",
-                $"Order ID: {newOrder.Id}",
-                $"Shipping: {selectedShipping.Type} ({selectedShipping.Price:C})",
-                $"Total Cost: {totalCost:C}",
-                "",
-                "Your order has been placed successfully!",
-                "Press any key to return to the main menu..."
-            };
+        {
+            "Order Confirmation:",
+            $"Order ID: {newOrder.Id}",
+            $"Shipping: {selectedShipping.Type} ({selectedShipping.Price:C})",
+            $"Total Cost: {totalCost:C}",
+            "",
+            "Your order has been placed successfully!",
+            "Press any key to return to the main menu..."
+        };
 
             Window confirmationWindow = new Window("Order Confirmation", confirmationText);
             confirmationWindow.Draw();

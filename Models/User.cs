@@ -76,7 +76,7 @@ internal class User
 
     internal static void EditUser(Window _adminList, int index)
     {
-        string item = _adminList.TextRows[index];
+        string item = _adminList.TextRows[index].Split(' ', StringSplitOptions.RemoveEmptyEntries)[2];
         using (var db = new AdvNookContext())
         {
             var user = db.Users.FirstOrDefault(u => u.Username == item);
