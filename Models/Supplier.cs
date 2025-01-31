@@ -48,13 +48,13 @@ internal class Supplier
 
     internal static void EditSupplier(Window _adminList, int index)
     {
-        string item = _adminList.TextRows[index];
+        string item = _adminList.TextRows[index].Split(' ')[0];
         using (var db = new AdvNookContext())
         {
-            var supplier = db.Suppliers.FirstOrDefault(s => s.Name == item);
+            var supplier = db.Suppliers.FirstOrDefault(s => s.Name.Contains(item));
             if (supplier != null)
             {
-                Window editSupplierForm = new Window("Edit Supplier", 75, 10, new List<string> {
+                Window editSupplierForm = new Window("Edit Supplier", new List<string> {
                 "Name:".PadRight(20) + supplier.Name,
                 "Country:".PadRight(20) + supplier.Country
             });
@@ -63,7 +63,7 @@ internal class Supplier
                 foreach (string row in editSupplierForm.TextRows)
                 {
                     int editIndex = editSupplierForm.TextRows.IndexOf(row);
-                    Console.SetCursorPosition(83, editIndex + 11);
+                    Console.SetCursorPosition(row.Length + 20, editIndex + 21);
 
                     switch (editIndex)
                     {

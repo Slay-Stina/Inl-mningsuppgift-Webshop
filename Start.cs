@@ -154,8 +154,9 @@ internal class Start
     {
         using (var db = new AdvNookContext())
         {
-            int categoryId = (int)PageWindow.SelectedIndex;
-            var category = db.Categories.Include(c => c.Products).FirstOrDefault(c => c.Id == categoryId);
+            int listIndex = (int)PageWindow.SelectedIndex;
+            string categoryName = PageWindow.TextRows[listIndex];
+            var category = db.Categories.Include(c => c.Products).FirstOrDefault(c => c.Name == categoryName);
 
             if (category != null)
             {

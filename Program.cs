@@ -24,7 +24,8 @@ internal class Program
     {
         ConsoleKey.N,
         ConsoleKey.E,
-        ConsoleKey.D
+        ConsoleKey.D,
+        ConsoleKey.V
     };
 
     public static MainPage ActiveMainPage = MainPage.Start;

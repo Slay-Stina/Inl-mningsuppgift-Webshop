@@ -18,14 +18,14 @@ internal class User
     {
         using (var db = new AdvNookContext())
         {
-            Window userForm = new Window("New User", 125, 0, new List<string> {
+            Window userForm = new Window("New User", new List<string> {
             "First Name:",
             "Last Name:",
             "Age:",
             "Email:",
             "Address:",
             "City:",
-            "".PadRight(20),
+            "".PadRight(50),
             });
             userForm.Draw();
 
@@ -34,7 +34,7 @@ internal class User
             foreach (string row in userForm.TextRows)
             {
                 int index = userForm.TextRows.IndexOf(row);
-                Console.SetCursorPosition(127 + row.Length, index + 1);
+                Console.SetCursorPosition(53 + row.Length, index + 21);
                 switch (index)
                 {
                     case 0:
@@ -76,28 +76,28 @@ internal class User
 
     internal static void EditUser(Window _adminList, int index)
     {
-        string item = _adminList.TextRows[index].Split(' ', StringSplitOptions.RemoveEmptyEntries)[2];
+        string item = _adminList.TextRows[index].Split(' ')[0];
         using (var db = new AdvNookContext())
         {
             var user = db.Users.FirstOrDefault(u => u.Username == item);
             if (user != null)
             {
-                Window editUserWindow = new Window("Edit User", 125, 0, new List<string>
-            {
-                "First Name:".PadRight(20) + user.FirstName,
-                "Last Name:".PadRight(20) + user.LastName,
-                "Age:".PadRight(20) + user.Age,
-                "Email:".PadRight(20) + user.Email,
-                "Address:".PadRight(20) + user.Adress,
-                "City:".PadRight(20) + user.City,
-                "Admin (Y/N):".PadRight(20) + (user.Admin ? "Y" : "N")
-            });
+                Window editUserWindow = new Window("Edit User", new List<string>
+                {
+                    "First Name:".PadRight(20) + user.FirstName,
+                    "Last Name:".PadRight(20) + user.LastName,
+                    "Age:".PadRight(20) + user.Age,
+                    "Email:".PadRight(20) + user.Email,
+                    "Address:".PadRight(20) + user.Adress,
+                    "City:".PadRight(20) + user.City,
+                    "Admin (Y/N):".PadRight(20) + (user.Admin ? "Y" : "N")
+                });
                 editUserWindow.Draw();
 
                 foreach (var row in editUserWindow.TextRows)
                 {
                     int editIndex = editUserWindow.TextRows.IndexOf(row);
-                    Console.SetCursorPosition(127 + row.Length, editIndex + 1);
+                    Console.SetCursorPosition(36 + row.Length, editIndex + 21);
 
                     switch (editIndex)
                     {

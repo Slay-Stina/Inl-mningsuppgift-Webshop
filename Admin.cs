@@ -23,6 +23,7 @@ internal class Admin
         { SubPage.Products, $"Products {_headerDefault}" },
         { SubPage.Users, $"Users {_headerDefault}" },
         { SubPage.Suppliers, $"Suppliers {_headerDefault}" },
+        { SubPage.Checkout, $"Orders - 'E'dit shipping status - 'V'iew order details" },
         { SubPage.Default, $"Welcome to the Admin Panel!" }
     };
 
@@ -52,48 +53,6 @@ internal class Admin
                 break;
         }
     }
-
-    private static void AdminOrders()
-    {
-        List<string> orderList = new List<string>();
-
-        using (var db = new AdvNookContext())
-        {
-            var orders = from o in db.Orders
-                         join u in db.Users on o.UserId equals u.Id
-                         join s in db.Shippings on o.ShippingId equals s.Id
-                         select new
-                         {
-                             OrderId = o.Id,
-                             OrderDate = o.OrderDate,
-                             Username = u.Username,
-                             OrderStatus = o.Status,
-                             ShippingType = s.Type,
-                         };
-
-            // Om du vill konvertera resultatet till en lista av strängar för att visa i UI
-            orderList = orders.Select(o =>
-                $"{o.OrderId.ToString().PadRight(10)}" +
-                $"{o.OrderDate.ToString("yyyy-MM-dd").PadRight(15)}" +
-                $"{o.Username.PadRight(20)}" +
-                $"{o.OrderStatus.ToString().PadRight(15)}" +
-                $"{o.ShippingType.PadRight(15)}"
-            ).ToList();
-        }
-
-
-        List<string> tableHeader = new List<string>
-    {
-        $"{"Order ID".PadRight(10)}{"Order Date".PadRight(15)}{"User".PadRight(20)}{"Status".PadRight(15)}{"Shipping".PadRight(15)}"
-    };
-
-        orderList.Insert(0, tableHeader[0]);
-
-        _adminList.TextRows = orderList.Count == 0 ? new List<string> { "No orders found." } : orderList;
-
-        _adminList.Navigate();
-    }
-
 
     public static void SelectAdminItem(ConsoleKey key)
     {
@@ -158,8 +117,176 @@ internal class Admin
                     Supplier.RemoveSupplier(_adminList, (int)_adminList.SelectedIndex);
                 }
                 break;
+            case SubPage.Checkout:
+                if ( key == ConsoleKey.V)
+                {
+                    ViewOrder(_adminList, (int)_adminList.SelectedIndex);
+                }
+                if (key == ConsoleKey.E)
+                {
+                    EditOrder(_adminList, (int)_adminList.SelectedIndex);
+                }
+
+                break;
         }
     }
+    private static void AdminOrders()
+    {
+        List<string> orderList = new List<string>();
+
+        using (var db = new AdvNookContext())
+        {
+            var orders = from o in db.Orders
+                         join u in db.Users on o.UserId equals u.Id
+                         join s in db.Shippings on o.ShippingId equals s.Id
+                         select new
+                         {
+                             OrderId = o.Id,
+                             OrderDate = o.OrderDate,
+                             Username = u.Username,
+                             OrderStatus = o.Status,
+                             ShippingType = s.Type,
+                         };
+
+            // Om du vill konvertera resultatet till en lista av strängar för att visa i UI
+            orderList = orders.Select(o =>
+                $"{o.OrderId.ToString().PadRight(10)}" +
+                $"{o.OrderDate.ToString("yyyy-MM-dd").PadRight(15)}" +
+                $"{o.Username.PadRight(20)}" +
+                $"{o.OrderStatus.ToString().PadRight(15)}" +
+                $"{o.ShippingType.PadRight(15)}"
+            ).ToList();
+        }
+
+
+        List<string> tableHeader = new List<string>
+    {
+        $"{"Order ID".PadRight(10)}{"Order Date".PadRight(15)}{"User".PadRight(20)}{"Status".PadRight(15)}{"Shipping".PadRight(15)}"
+    };
+
+        orderList.Insert(0, tableHeader[0]);
+
+        _adminList.TextRows = orderList.Count == 0 ? new List<string> { "No orders found." } : orderList;
+
+        _adminList.Navigate();
+    }
+
+    internal static void EditOrder(Window adminList, int selectedIndex)
+    {
+        int orderId = int.Parse(adminList.TextRows[selectedIndex].Split(' ')[0]);
+
+        using (var db = new AdvNookContext())
+        {
+            var order = db.Orders.FirstOrDefault(o => o.Id == orderId);
+            if (order == null)
+            {
+                Console.WriteLine("Order not found.");
+                return;
+            }
+
+            // Skapa lista över orderstatusar
+            List<string> statusList = Enum.GetNames(typeof(OrderStatus))
+                                          .Select((name, index) => $"{index + 1}. {name}")
+                                          .ToList();
+
+            // Rita fönstret med nuvarande status
+            Window orderStatus = new Window($"Current Status: {order.Status}", statusList);
+            orderStatus.Draw();
+
+            // Låt användaren välja ny status
+            int userChoice = 0;
+            while (true)
+            {
+                Console.SetCursorPosition(50, 27);
+                Console.Write("Enter your choice (1 - {0}): ", statusList.Count);
+                if (int.TryParse(Console.ReadLine(), out userChoice) &&
+                    userChoice > 0 &&
+                    userChoice <= statusList.Count)
+                {
+                    break;
+                }
+                Console.WriteLine("Invalid input. Please try again.");
+            }
+
+            // Uppdatera statusen
+            OrderStatus newStatus = (OrderStatus)(userChoice - 1);
+            order.Status = newStatus;
+
+            // Spara ändringar i databasen
+            db.Orders.Update(order);
+            db.SaveChanges();
+
+            Window successWindow = new Window("SUCCESS", new List<string>
+            {
+                $"Order #{order.Id} status updated to {order.Status}.",
+                "Press any key to return..."
+            });
+            successWindow.Draw();
+            while (!Console.KeyAvailable) { }
+        }
+    }
+
+
+    internal static void ViewOrder(Window adminList, int selectedIndex)
+    {
+        int orderId = int.Parse(adminList.TextRows[selectedIndex].Split(' ')[0]);
+
+        using (var db = new AdvNookContext())
+        {
+            var order = db.Orders.FirstOrDefault(o => o.Id == orderId);
+            var user = db.Users.FirstOrDefault(u => u.Id == order.UserId);
+            var shipping = db.Shippings.FirstOrDefault(s => s.Id == order.ShippingId);
+            var orderDetails = db.OrderDetails
+                .Where(od => od.OrderId == order.Id)
+                .ToList();
+
+            if (order == null || user == null || shipping == null || orderDetails.Count == 0)
+            {
+                Console.WriteLine("Order not found or incomplete data.");
+                return;
+            }
+
+            // Bygg en lista med orderdetaljer
+            List<string> orderInfo = new List<string>
+        {
+            $"Order ID: {order.Id}",
+            $"Order Date: {order.OrderDate:yyyy-MM-dd}",
+            $"Status: {order.Status}",
+            $"Customer: {user.FirstName} {user.LastName}",
+            $"Email: {user.Email}",
+            $"Address: {user.Adress}, {user.City}",
+            $"Shipping Type: {shipping.Type}",
+            $"Shipping Price: {shipping.Price:C}",
+            "",
+            "Products:"
+        };
+
+            decimal totalPrice = shipping.Price;
+
+            foreach (var detail in orderDetails)
+            {
+                var product = db.Products.FirstOrDefault(p => p.Id == detail.ProductId);
+                if (product != null)
+                {
+                    string productInfo = $"{detail.Quantity}x {product.Name} @ {detail.UnitPrice:C} each";
+                    orderInfo.Add(productInfo);
+                    totalPrice += detail.Quantity * detail.UnitPrice;
+                }
+            }
+
+            orderInfo.Add(new string('-', 50));
+            orderInfo.Add($"Total Price: {totalPrice:C}");
+
+            // Visa detaljerna i ett fönster
+            Window orderDetailsWindow = new Window($"Order Details - Order #{order.Id}", orderInfo);
+            orderDetailsWindow.Draw();
+
+            Console.WriteLine("\nPress any key to return...");
+            while (!Console.KeyAvailable) { }
+        }
+    }
+
+
     private static void UpdateHeader()
     {
         if (_subPageHeaders.TryGetValue(Program.ActiveSubPage, out string header))
@@ -220,8 +347,8 @@ internal class Admin
         {
             users = db.Users
                 .Select(u =>
-                    $"{u.FirstName} {u.LastName}".PadRight(30) +
                     $"{u.Username.PadRight(20)}" +
+                    $"{u.FirstName} {u.LastName}".PadRight(30) +
                     $"{u.Email.PadRight(30)}" +
                     $"{(u.Admin ? "Yes" : "No")}".PadRight(20)
                 ).ToList();
@@ -248,10 +375,17 @@ internal class Admin
         {
             suppliers = db.Suppliers
                 .Select(s => 
-                    $"{s.Name.PadRight(20)}" +
-                    $"{s.Country}"
+                    $"{s.Name.PadRight(30)}" +
+                    $"{s.Country.PadLeft(20)}"
             ).ToList();
         }
+
+        List<string> tableHeader = new List<string>
+        {
+            $"{"Name".PadRight(30)}{"Country".PadLeft(20)}"
+        };
+
+        suppliers.Insert(0, tableHeader[0]);
 
         _adminList.TextRows = suppliers.Count == 0 ? new List<string> { "No suppliers found." } : suppliers;
 

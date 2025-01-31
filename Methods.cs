@@ -15,7 +15,8 @@ internal class Methods
             }
             else
             {
-                Console.WriteLine("You must enter a number.");
+                Window error = new Window("ERROR", "You must enter a number.");
+                error.Draw();
             }
         }
     }
