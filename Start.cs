@@ -1,5 +1,6 @@
 ﻿using Assignment_Webshop.Models;
 using Inlämningsuppgift_Webshop;
+using Inlämningsuppgift_Webshop.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_Webshop;
@@ -248,9 +249,12 @@ internal class Start
                 break;
         }
     }
-    public static void Checkout()
+    public static async void Checkout()
     {
         Program.CloseAllDbConnections();
+        OrderLogger orderLogger = new OrderLogger();
+        orderLogger.Name = Login.ActiveUser != null ? $"{Login.ActiveUser.FirstName} {Login.ActiveUser.LastName}" : "Guest";
+
         using (var db = new AdvNookContext())
         {
             // Hämta aktuell varukorg
@@ -301,7 +305,7 @@ internal class Start
                 ShippingId = selectedShipping.Id,
                 OrderDate = DateTime.Now
             };
-
+            orderLogger.Order = newOrder;
             db.Orders.Add(newOrder);
 
             // Steg 3: Lägg till orderdetaljer
@@ -327,7 +331,7 @@ internal class Start
 
             decimal totalCost = selectedShipping.Price +
                                 basket.BasketProducts.Sum(bp => bp.Quantity * bp.Product.Price);
-
+            orderLogger.TotalPrice = totalCost;
             basket.BasketProducts.Clear();
 
             db.SaveChanges();
@@ -343,6 +347,7 @@ internal class Start
             "Your order has been placed successfully!",
             "Press any key to return to the main menu..."
         };
+            Task.Run(() => { Connection.OrderCollection().InsertOne(orderLogger); }); //Skicka till MongoDB
 
             Window confirmationWindow = new Window("Order Confirmation", confirmationText);
             confirmationWindow.Draw();
