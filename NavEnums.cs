@@ -16,5 +16,6 @@ internal enum SubPage
     CategoryProducts,
     Basket,
     Search,
+    Queries,
     Checkout
 }

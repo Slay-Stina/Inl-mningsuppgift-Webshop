@@ -18,14 +18,8 @@ internal class Program
         ConsoleKey.U,
         ConsoleKey.B,
         ConsoleKey.S,
-        ConsoleKey.O
-    };
-    static List<ConsoleKey> AdminKeysList { get; } = new List<ConsoleKey>
-    {
-        ConsoleKey.N,
-        ConsoleKey.E,
-        ConsoleKey.D,
-        ConsoleKey.V
+        ConsoleKey.O,
+        ConsoleKey.Q
     };
 
     public static MainPage ActiveMainPage = MainPage.Start;
@@ -81,9 +75,11 @@ internal class Program
         switch (key)
         {
             case ConsoleKey.P:
+                Start.ProductList.Clear();
                 return SubPage.Products;
 
             case ConsoleKey.C:
+                Start.PageWindow.SelectedIndex = 0;
                 return SubPage.Categories;
 
             case ConsoleKey.U:
@@ -93,6 +89,11 @@ internal class Program
                 if (ActiveMainPage == MainPage.Admin)
                 { return SubPage.Suppliers; }
                 else { return SubPage.Search; }
+
+            case ConsoleKey.Q:
+                if (ActiveMainPage == MainPage.Admin)
+                { return SubPage.Queries; }
+                else { return SubPage.Default; }
 
             case ConsoleKey.B:
                 return SubPage.Basket;
@@ -158,7 +159,7 @@ internal class Program
 
     private static bool AdminKeys(ConsoleKey key)
     {
-        if (ActiveMainPage == MainPage.Admin && AdminKeysList.Contains(key))
+        if (ActiveMainPage == MainPage.Admin)
         {
             Admin.SelectAdminItem(key);
             return true;

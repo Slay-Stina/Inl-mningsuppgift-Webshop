@@ -14,6 +14,8 @@ internal class User
     public bool LoggedIn { get; set; } = false;
     public Basket Basket { get; set; } = new Basket();
 
+    public virtual ICollection<Order> Orders { get; set; }
+
     public static void AddUser()
     {
         using (var db = new AdvNookContext())

@@ -109,17 +109,16 @@ internal class Start
     internal static void ProductDetails()
     {
         Product product;
+        string productName = PageWindow.TextRows[(int)PageWindow.SelectedIndex].Split(' ')[0];
         using (var db = new AdvNookContext())
         {
-            string selectedRow = PageWindow.TextRows[(int)PageWindow.SelectedIndex];
             product = db.Products
                                 .Include(p => p.Categories)
-                                .FirstOrDefault(p => selectedRow.Contains(p.Name));
-
+                                .FirstOrDefault(p => p.Name.Contains(productName));
         }
         List<string> details = new List<string>
         {
-            $"Price: {product.Price.ToString("C")}",
+            $"Price: {product.Price:c}",
             $"Categories: {string.Join(", ", product.Categories.Select(c => c.Name))}",
             ""
         };
@@ -134,7 +133,7 @@ internal class Start
 
         if (Program.KeyInfo.Key == ConsoleKey.Enter)
         {
-            Basket.AddProductToBasket(product);
+            Basket.AddProductToBasket(product.Id);
         }
     }
 
@@ -207,24 +206,18 @@ internal class Start
 
     private static void FeaturedProducts()
     {
-        List<Product> featuredProducts = new List<Product>();
         using (var db = new AdvNookContext())
         {
-            featuredProducts = db.Products
+            ProductList = db.Products
                                   .Where(p => p.Featured)
                                   .Take(3)
                                   .ToList();
         }
 
-        while (featuredProducts.Count < 3)
-        {
-            featuredProducts.Add(new Product { Name = "No featured product", Price = 0, Featured = false });
-        }
-
         char[] xyz = { 'X', 'Y', 'Z' };
         for (int i = 0; i < 3; i++)
         {
-            var product = featuredProducts[i];
+            var product = ProductList[i];
             List<string> featureDetails = new List<string>
         {
             product.Name.PadRight(30),
@@ -242,9 +235,9 @@ internal class Start
             case ConsoleKey.Y:
             case ConsoleKey.Z:
                 int productIndex = Array.IndexOf(xyz, Char.ToUpper(Program.KeyInfo.KeyChar));
-                if (productIndex >= 0 && productIndex < featuredProducts.Count)
+                if (productIndex >= 0 && productIndex < ProductList.Count)
                 {
-                    Basket.AddProductToBasket(featuredProducts[productIndex]);
+                    Basket.AddProductToBasket(ProductList[productIndex].Id);
                 }
                 break;
         }
@@ -277,10 +270,10 @@ internal class Start
                 ).ToList());
 
             List<string> shipHeader = new List<string>
-        {
-            "",
-            "ID".PadRight(10) + "Type".PadRight(20) + "Price".PadRight(20)
-        };
+            {
+                "",
+                "ID".PadRight(10) + "Type".PadRight(20) + "Price".PadRight(20)
+            };
             shippingWindow.TextRows.InsertRange(0, shipHeader);
             shippingWindow.Draw();
 
@@ -307,11 +300,12 @@ internal class Start
             };
             orderLogger.Order = newOrder;
             db.Orders.Add(newOrder);
+            db.SaveChanges();
 
             // Steg 3: Lägg till orderdetaljer
             foreach (var basketProduct in basket.BasketProducts)
             {
-                var productToUpdate = db.Products.FirstOrDefault(p => p.Id == basketProduct.Product.Id);
+                var productToUpdate = db.Products.FirstOrDefault(p => p.Id == basketProduct.ProductId);
                 if (productToUpdate != null)
                 {
                     OrderDetail orderDetail = new OrderDetail
@@ -332,21 +326,25 @@ internal class Start
             decimal totalCost = selectedShipping.Price +
                                 basket.BasketProducts.Sum(bp => bp.Quantity * bp.Product.Price);
             orderLogger.TotalPrice = totalCost;
-            basket.BasketProducts.Clear();
+
+            var basketProducts = db.BasketProduct.Where(bp => bp.BasketId == basket.Id);
+            db.RemoveRange(basketProducts);
+            basket.BasketProducts.Clear(); //Rensa varukorgen
 
             db.SaveChanges();
 
             // Steg 4: Visa orderbekräftelse
             List<string> confirmationText = new List<string>
-        {
-            "Order Confirmation:",
-            $"Order ID: {newOrder.Id}",
-            $"Shipping: {selectedShipping.Type} ({selectedShipping.Price:C})",
-            $"Total Cost: {totalCost:C}",
-            "",
-            "Your order has been placed successfully!",
-            "Press any key to return to the main menu..."
-        };
+            {
+                "Order Confirmation:",
+                $"Order ID: {newOrder.Id}",
+                $"Shipping: {selectedShipping.Type} ({selectedShipping.Price:C})",
+                $"Total Cost: {totalCost:C}",
+                "",
+                "Your order has been placed successfully!",
+                "Press any key to return to the main menu..."
+            };
+
             Task.Run(() => { Connection.OrderCollection().InsertOne(orderLogger); }); //Skicka till MongoDB
 
             Window confirmationWindow = new Window("Order Confirmation", confirmationText);

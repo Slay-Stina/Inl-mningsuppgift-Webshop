@@ -1,5 +1,9 @@
 ﻿using Assignment_Webshop.Models;
+using Dapper;
+using Inlämningsuppgift_Webshop;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Assignment_Webshop;
 
@@ -12,10 +16,12 @@ internal class Admin
         "'P': Manage products.",
         "'U': Manage users.",
         "'S': Manage suppliers.",
-        "'O': Manage orders."
+        "'O': Manage orders.",
+        "'Q': Queries"
     };
     private static Window _menu = new Window("Admin menu", 25, 0, _list);
-    private static Window _adminList { get; set; } = new Window(2, 8);
+    private static Window _adminList { get; set; } = new Window(2, 9);
+    private static Window _query { get; set; } = new Window(50, 9);
     private static string _headerDefault = "- 'N'ew - 'E'dit - 'D'elete";
     private static readonly Dictionary<SubPage, string> _subPageHeaders = new Dictionary<SubPage, string>
     {
@@ -23,8 +29,9 @@ internal class Admin
         { SubPage.Products, $"Products {_headerDefault}" },
         { SubPage.Users, $"Users {_headerDefault}" },
         { SubPage.Suppliers, $"Suppliers {_headerDefault}" },
-        { SubPage.Checkout, $"Orders - 'E'dit shipping status - 'V'iew order details" },
-        { SubPage.Default, $"Welcome to the Admin Panel!" }
+        { SubPage.Checkout, "Orders - 'E'dit shipping status - 'V'iew order details" },
+        {SubPage.Queries, "Useful queries - ↑↓ Navigate - → Select" },
+        { SubPage.Default, "Welcome to the Admin Panel!" }
     };
 
     internal static void Page()
@@ -51,6 +58,9 @@ internal class Admin
             case SubPage.Checkout:
                 AdminOrders();
                 break;
+            case SubPage.Queries:
+                QueryList();
+                break;
         }
     }
 
@@ -65,11 +75,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    Category.EditCategory(_adminList, (int)_adminList.SelectedIndex);
+                    Category.EditCategory(_adminList, _adminList.SelectedIndex.Value);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    Category.RemoveCategory(_adminList, (int)_adminList.SelectedIndex);
+                    Category.RemoveCategory(_adminList, _adminList.SelectedIndex.Value);
                 }
                 break;
 
@@ -80,11 +90,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    Product.EditProduct(_adminList, (int)_adminList.SelectedIndex);
+                    Product.EditProduct(_adminList, _adminList.SelectedIndex.Value);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    Product.RemoveProduct(_adminList, (int)_adminList.SelectedIndex);
+                    Product.RemoveProduct(_adminList, _adminList.SelectedIndex.Value);
                 }
                 break;
 
@@ -95,11 +105,11 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    User.EditUser(_adminList, (int)_adminList.SelectedIndex);
+                    User.EditUser(_adminList, _adminList.SelectedIndex.Value);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    User.RemoveUser(_adminList, (int)_adminList.SelectedIndex);
+                    User.RemoveUser(_adminList, _adminList.SelectedIndex.Value);
                 }
                 break;
 
@@ -110,26 +120,36 @@ internal class Admin
                 }
                 else if (key == ConsoleKey.E)
                 {
-                    Supplier.EditSupplier(_adminList, (int)_adminList.SelectedIndex);
+                    Supplier.EditSupplier(_adminList, _adminList.SelectedIndex.Value);
                 }
                 else if (key == ConsoleKey.D)
                 {
-                    Supplier.RemoveSupplier(_adminList, (int)_adminList.SelectedIndex);
+                    Supplier.RemoveSupplier(_adminList, _adminList.SelectedIndex.Value);
                 }
                 break;
             case SubPage.Checkout:
                 if ( key == ConsoleKey.V)
                 {
-                    ViewOrder(_adminList, (int)_adminList.SelectedIndex);
+                    ViewOrder(_adminList.SelectedIndex.Value);
                 }
                 if (key == ConsoleKey.E)
                 {
-                    EditOrder(_adminList, (int)_adminList.SelectedIndex);
+                    EditOrder(_adminList.SelectedIndex.Value);
                 }
-
+                break;
+            case SubPage.Queries:
+                if (key == ConsoleKey.RightArrow)
+                {
+                    ShowQuery(_adminList.SelectedIndex.Value);
+                }
+                if (key != ConsoleKey.LeftArrow)
+                {
+                    Program.ActiveSubPage = SubPage.Queries;
+                }
                 break;
         }
     }
+
     private static void AdminOrders()
     {
         List<string> orderList = new List<string>();
@@ -142,8 +162,8 @@ internal class Admin
                          select new
                          {
                              OrderId = o.Id,
-                             OrderDate = o.OrderDate,
-                             Username = u.Username,
+                             o.OrderDate,
+                             u.Username,
                              OrderStatus = o.Status,
                              ShippingType = s.Type,
                          };
@@ -171,9 +191,9 @@ internal class Admin
         _adminList.Navigate();
     }
 
-    internal static void EditOrder(Window adminList, int selectedIndex)
+    internal static void EditOrder(int selectedIndex)
     {
-        int orderId = int.Parse(adminList.TextRows[selectedIndex].Split(' ')[0]);
+        int orderId = int.Parse(_adminList.TextRows[selectedIndex].Split(' ')[0]);
 
         using (var db = new AdvNookContext())
         {
@@ -227,9 +247,9 @@ internal class Admin
     }
 
 
-    internal static void ViewOrder(Window adminList, int selectedIndex)
+    internal static void ViewOrder(int selectedIndex)
     {
-        int orderId = int.Parse(adminList.TextRows[selectedIndex].Split(' ')[0]);
+        int orderId = int.Parse(_adminList.TextRows[selectedIndex].Split(' ')[0]);
 
         using (var db = new AdvNookContext())
         {
@@ -278,7 +298,7 @@ internal class Admin
             orderInfo.Add($"Total Price: {totalPrice:C}");
 
             // Visa detaljerna i ett fönster
-            Window orderDetailsWindow = new Window($"Order Details - Order #{order.Id}", orderInfo);
+            Window orderDetailsWindow = new Window($"Order Details - Order #{order.Id}",50,15, orderInfo);
             orderDetailsWindow.Draw();
 
             Console.WriteLine("\nPress any key to return...");
@@ -392,6 +412,192 @@ internal class Admin
         _adminList.Navigate();
     }
 
+    private static void QueryList()
+    {
+        _adminList.TextRows = new List<string>
+        {
+            "Orders per user",
+            "Revenue per day",
+            "Most sold products",
+            "Customers Favorite Products",
+            "Number of orders by order status"
+        };
+
+        _adminList.Navigate();
+    }
+    private static void ShowQuery(int selectedIndex)
+    {
+        using (var db = new AdvNookContext())
+        {
+            switch (selectedIndex)
+            {
+                case 0:
+                    OrderPerUser(db);
+                    break;
+                case 1:
+                    TotalRevenue();
+                    break;
+                case 2:
+                    TopProducts(db);
+                    break;
+                case 3:
+                    CustomerFavoriteProducts();
+                    break;
+                case 4:
+                    OrderByStatus(db);
+                    break;
+            }
+        }
+    }
+
+
+    private static void OrderPerUser(AdvNookContext db)
+    {
+        _query.Header = "Orders Per User";
+
+        _query.TextRows = db.Users
+            .Select(user => new
+            {
+                UserId = user.Id,
+                Name = user.FirstName + " " + user.LastName,
+                TotalValue = db.Orders
+                    .Where(o => o.UserId == user.Id)
+                    .SelectMany(o => o.OrderDetails)
+                    .Sum(od => od.UnitPrice * od.Quantity),
+                OrderCount = db.Orders
+                    .Where(o => o.UserId == user.Id).Count()
+            }).OrderBy(x => x.Name)
+            .Select(result =>
+                $"{result.Name}".PadRight(20) +
+                $"{result.TotalValue:C}".PadLeft(20) +
+                $"{result.OrderCount}".PadLeft(20)
+            )
+            .ToList();
+
+        string header = "User Name".PadRight(20) + "Total Value".PadLeft(20) + "Total # Orders".PadLeft(20);
+        _query.TextRows.Insert(0, header);
+        _query.Draw();
+        while (Console.KeyAvailable == false) { }
+
+
+    }
+    private static void TopProducts(AdvNookContext db)
+    {
+        _query.Header = "Most Sold Products";
+
+        _query.TextRows = db.OrderDetails
+                        .GroupBy(od => od.Product.Name)
+                        .Select(group => new
+                        {
+                            ProductName = group.Key,
+                            TotalQuantity = group.Sum(od => od.Quantity)
+                        })
+                        .OrderByDescending(group => group.TotalQuantity)
+                        .Select(group =>
+                            $"{group.ProductName}".PadRight(35) +
+                            $"{group.TotalQuantity}".PadLeft(10)
+                        )
+                        .ToList();
+
+        string header = "Product Name".PadRight(35) + "Quantity Sold".PadLeft(10);
+        _query.TextRows.Insert(0, header);
+        _query.Draw();
+        while (Console.KeyAvailable == false) { }
+
+    }
+
+    private static void OrderByStatus(AdvNookContext db)
+    {
+        _query.Header = "Orders by Status";
+
+        var ordersByStatus = db.Orders
+                            .GroupBy(o => o.Status)
+                            .Select(group =>
+                                $"{group.Key}".PadRight(20) +
+                                $"{group.Count()}".PadLeft(20)
+                            )
+                            .ToList();
+
+        string header = "Orderstatus".PadRight(20) + "Amount".PadLeft(20);
+        _query.TextRows.Insert(0, header);
+        _query.TextRows = ordersByStatus;
+        _query.Draw();
+        while (Console.KeyAvailable == false) { }
+    }
+    private static void CustomerFavoriteProducts()
+    {
+        _query.Header = "Customers' Favorite Products";
+
+        using (var connection = new SqlConnection(Connection.StringAzure))
+        {
+            connection.Open();
+
+            string sql = @"
+            SELECT 
+                CONCAT(u.FirstName, ' ', u.LastName) AS FullName,
+                p.Name AS ProductName,
+                SUM(od.Quantity) AS TotalQuantity
+            FROM Users u
+            INNER JOIN Orders o ON u.Id = o.UserId
+            INNER JOIN OrderDetails od ON o.Id = od.OrderId
+            INNER JOIN Products p ON od.ProductId = p.Id
+            GROUP BY u.FirstName, u.LastName, p.Name, u.Id
+            HAVING SUM(od.Quantity) = (
+                SELECT TOP 1 SUM(od2.Quantity)
+                FROM OrderDetails od2
+                INNER JOIN Orders o2 ON od2.OrderId = o2.Id
+                WHERE o2.UserId = u.Id
+                GROUP BY od2.ProductId
+                ORDER BY SUM(od2.Quantity) DESC
+            )
+            ORDER BY FullName";
+
+            var favoriteProducts = connection.Query<(string FullName, string ProductName, int TotalQuantity)>(sql)
+                .Select(entry =>
+                    $"{entry.FullName}".PadRight(30) +
+                    $"{entry.ProductName}".PadRight(30) +
+                    $"{entry.TotalQuantity}".PadLeft(10)
+                )
+                .ToList();
+
+            string header = "Customer Name".PadRight(30) + "Favorite Product".PadRight(30) + "Quantity".PadLeft(10);
+            favoriteProducts.Insert(0, header);
+
+            _query.TextRows = favoriteProducts;
+            _query.Draw();
+            while (Console.KeyAvailable == false) { }
+        }
+    }
+
+    private static void TotalRevenue()
+    {
+        _query.Header = "Revenue per day";
+
+        using (var connection = new SqlConnection(Connection.StringAzure))
+        {
+            connection.Open();
+
+            string sql = @"
+            SELECT 
+                CAST(OrderDate as date) as OrderDate,
+                SUM(od.Quantity * od.UnitPrice) as TotalRevenue
+            FROM OrderDetails od
+            INNER JOIN Orders o ON o.Id = od.OrderId
+            group by CAST(OrderDate as date)
+            ORDER BY OrderDate DESC";
+
+            _query.TextRows = connection.Query<(DateTime SalesDate, decimal Revenue)>(sql)
+                .Select(entry =>
+                $"{entry.SalesDate.ToShortDateString()}".PadRight(20) +
+                $"{entry.Revenue:C}".PadLeft(10)
+                ).ToList();
+
+            string header = "Order Date".PadRight(20) + "Revenue".PadLeft(10);
+            _query.TextRows.Insert(0, header);
+            _query.Draw();
+            while (Console.KeyAvailable == false) { }
+        }
+    }
 
     private static void Banner()
     {

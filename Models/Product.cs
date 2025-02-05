@@ -13,7 +13,9 @@ internal class Product
     public int Amount { get; set; }
     public virtual Supplier Supplier { get; set; }
     public bool Featured { get; set; }
+
     public virtual ICollection<BasketProduct> BasketProducts { get; set; } = new List<BasketProduct>();
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; }
 
     internal static void AddNewProduct()
     {

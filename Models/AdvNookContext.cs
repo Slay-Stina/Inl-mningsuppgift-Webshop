@@ -40,7 +40,7 @@ internal class AdvNookContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=tcp:slayserver.database.windows.net,1433;Initial Catalog=Slay Stina;Persist Security Info=False;User ID=slaystina;Password=August1337;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+        optionsBuilder.UseSqlServer(Connection.StringAzure);
     }
 
 }

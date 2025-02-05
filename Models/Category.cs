@@ -29,9 +29,9 @@ internal class Category
         }
     }
 
-    internal static void EditCategory(Window _adminList, int index)
+    internal static void EditCategory(Window adminList, int index)
     {
-        string item = _adminList.TextRows[index];
+        string item = adminList.TextRows[index];
         using (var db = new AdvNookContext())
         {
             var category = db.Categories.FirstOrDefault(c => c.Name == item);

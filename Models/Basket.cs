@@ -1,5 +1,4 @@
 ﻿using Inlämningsuppgift_Webshop;
-using Microsoft.EntityFrameworkCore;
 
 namespace Assignment_Webshop.Models;
 
@@ -30,11 +29,13 @@ internal class Basket
             _window.Draw();
         }
     }
-    public static void AddProductToBasket(Product product)
+    public static void AddProductToBasket(int id)
     {
+        _currentBasket = Login.ActiveUser != null ? Login.ActiveUser.Basket : GuestBasket;
+
         // Lägg till produkten i den aktuella varukorgen
         var basketProduct = _currentBasket.BasketProducts
-            .FirstOrDefault(bp => bp.ProductId == product.Id);
+            .FirstOrDefault(bp => bp.ProductId == id);
 
         if (basketProduct != null)
         {
@@ -42,7 +43,12 @@ internal class Basket
         }
         else
         {
-            _currentBasket.BasketProducts.Add(new BasketProduct { Product = product, Quantity = 1 });
+            _currentBasket.BasketProducts.Add(new BasketProduct
+            {
+                Product = Start.ProductList.FirstOrDefault(p => p.Id == id),
+                ProductId = id,
+                Quantity = 1
+            });
         }
 
         // Uppdatera varukorgen i databasen
@@ -51,18 +57,10 @@ internal class Basket
             // Om användaren är inloggad, spara varukorgen
             if (Login.ActiveUser != null)
             {
-                db.Entry(_currentBasket).State = EntityState.Modified;
+                db.Update(_currentBasket);
+                db.SaveChanges();
             }
-            else
-            {
-                // Om vi har en gästvarukorg, skapa en ny eller uppdatera befintlig
-                db.Entry(_currentBasket).State = EntityState.Added;
-            }
-
-            db.SaveChanges();
         }
-
-        _currentBasket = Login.ActiveUser != null ? Login.ActiveUser.Basket : GuestBasket;
         DrawBasket();
     }
 
@@ -97,59 +95,42 @@ internal class Basket
     }
     public static void ChangeQuantity()
     {
-        if (_currentBasket.BasketProducts != null && _currentBasket.BasketProducts.Count > 0 && _window.SelectedIndex is not null)
-        {
-            var selectedProduct = _currentBasket.BasketProducts.ElementAtOrDefault(_window.SelectedIndex.Value);
+        if (_currentBasket.BasketProducts is null || !_currentBasket.BasketProducts.Any() || _window.SelectedIndex is null)
+            return;
 
-            if (Program.KeyInfo.Key == ConsoleKey.RightArrow && selectedProduct != null)
+        var selectedProduct = _currentBasket.BasketProducts.ElementAtOrDefault(_window.SelectedIndex.Value);
+
+        if (Program.KeyInfo.Key == ConsoleKey.RightArrow)
+        {
+            selectedProduct.Quantity++;
+        }
+        else if (Program.KeyInfo.Key == ConsoleKey.LeftArrow)
+        {
+            selectedProduct.Quantity--;
+
+            if (selectedProduct.Quantity <= 0)
             {
-                // Öka kvantiteten och uppdatera databasen
-                selectedProduct.Quantity++;
-                UpdateProductInDatabase(selectedProduct);  // Uppdaterar kvantiteten i databasen
+                _currentBasket.BasketProducts.Remove(selectedProduct);
             }
-            else if (Program.KeyInfo.Key == ConsoleKey.LeftArrow && selectedProduct != null)
+        }
+
+        using (var db = new AdvNookContext())
+        {
+            var productInDb = db.BasketProduct.FirstOrDefault(bp => bp.Id == selectedProduct.Id);
+
+            if (productInDb != null)
             {
-                if (selectedProduct.Quantity > 1)
+                if (selectedProduct.Quantity > 0)
                 {
-                    // Minska kvantiteten och uppdatera databasen
-                    selectedProduct.Quantity--;
-                    UpdateProductInDatabase(selectedProduct);  // Uppdaterar kvantiteten i databasen
+                    productInDb.Quantity = selectedProduct.Quantity;
                 }
                 else
                 {
-                    // Ta bort produkten från varukorgen om kvantiteten är 1
-                    _currentBasket.BasketProducts.Remove(selectedProduct);
-                    RemoveProductFromDatabase(selectedProduct);  // Ta bort produkten från databasen
+                    db.BasketProduct.Remove(productInDb);
                 }
-            }
-
-            UpdateWindow();  // Uppdatera fönstret efter att ha ändrat kvantiteten
-        }
-    }
-
-    private static void UpdateProductInDatabase(BasketProduct basketProduct)
-    {
-        using (var db = new AdvNookContext())
-        {
-            var product = db.BasketProduct.FirstOrDefault(bp => bp.Id == basketProduct.Id); // Hitta rätt BasketProduct
-            if (product != null)
-            {
-                product.Quantity = basketProduct.Quantity;  // Uppdatera kvantiteten
-                db.SaveChanges();  // Spara ändringarna i databasen
+                db.SaveChanges();
             }
         }
-    }
-
-    private static void RemoveProductFromDatabase(BasketProduct basketProduct)
-    {
-        using (var db = new AdvNookContext())
-        {
-            var product = db.BasketProduct.FirstOrDefault(bp => bp.Id == basketProduct.Id); // Hitta rätt BasketProduct
-            if (product != null)
-            {
-                db.BasketProduct.Remove(product);  // Ta bort produkten från databasen
-                db.SaveChanges();  // Spara ändringarna i databasen
-            }
-        }
+        UpdateWindow();
     }
 }
